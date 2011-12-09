@@ -21,9 +21,9 @@ applications.
 Table tests in Go are awesome witout Go-table. Why use it?
 ----------------------------------------------------------
 
-Table driven tests, combined with Go's flexible anonomous type inference are
-already quite clean and conise even without Go-table. Go-table is just trying to
-squeeze a little more awesomeness out of this testing paradigm.
+Table driven testing, combined with Go's flexible anonomous type inference is
+already quite clean and conise even without Go-table. Go-table is merely trying
+to squeeze a little more awesomeness out of this Go-friendly testing paradigm.
 
 Go-table encourages [DRY][] coding. The code contained in your test files should
 only be repetitive in structure (so that writing it is easy). Any looping or
@@ -86,9 +86,9 @@ func TestFlagParser(t *testing.T) {
 
 [original example][table driven testing in go]
 
-The example isn't vastly shorter, or less complex, but the boiler-plate looping
-is gone and the added modularity eliminates the need for any extra helper
-functions.
+The example isn't vastly shorter, or less complex than the original example, but
+the boiler-plate looping is gone and the modularity eliminates the need for any
+extra helper functions.
 
 A close inspection also reveals that the test index `i` is no longer included in
 the error message, because the table package prepends test index information for
