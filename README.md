@@ -38,6 +38,7 @@ Features
 - Obviously, easy automation of table tests is a key feature.
 - Convenient logging features to automatically name/identify (failed) tests.
 - Automatic handling of runtime panics uncaught by test code.
+- Custom callbacks that can run before or after individual tests.
 
 Documentation
 =============
