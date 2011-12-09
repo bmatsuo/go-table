@@ -13,9 +13,9 @@ Don't write boiler-plate code. Write test code.
 What is Go-table?
 -----------------
 
-Go-table provides package "table" to facilitate [table driven testing in go][].
+Go-table provides package "table" to facilitate [table driven testing in Go][].
 Table driven tests are not difficult to write once you get the have of them.
-But, they're extremely quite effective once writtren.
+But, they're quite effective once writtren.
 
 Tests with Go-table are implemented as methods of a type defined in the test
 file. The generally reduce the actual Test&ast; function used by "testing" to
