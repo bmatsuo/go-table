@@ -115,7 +115,7 @@ Use goinstall to install go-table
 General Documentation
 ---------------------
 
-The latest documentation should be available on [GoPkgDoc][].
+Documentation at [GoPkgDoc][] should be fairly recent.
 
 To view documentation for your local Go-table installation, use godoc
 
