@@ -43,6 +43,15 @@ Features
 Documentation
 =============
 
+General Documentation
+---------------------
+
+Documentation at [GoPkgDoc][] should be fairly recent.
+
+To view documentation for your local Go-table installation, start a Godoc web server
+
+    godoc -http=:6060
+
 An example
 ----------
 
@@ -96,6 +105,9 @@ you automatically.
 These improvements are small, but eliminating this repitive code from virtually
 every unit test written is definitely *a win* in the big picture.
 
+Installing Go-table
+===================
+
 Prerequisites
 -------------
 
@@ -104,22 +116,14 @@ Prerequisites
 Installation
 -------------
 
-Use goinstall to install go-table
-
     goinstall github.com/bmatsuo/go-table/table
 
-General Documentation
----------------------
+or
 
-Documentation at [GoPkgDoc][] should be fairly recent.
-
-To view documentation for your local Go-table installation, use godoc
-
-    godoc github.com/bmatsuo/go-table/table
-
-Or alternatively, use a godoc http server
-
-    godoc -http=:6060
+    git clone https://github.com/bmatsuo/go-table
+    pushd go-table/table
+    gomake install
+    popd
 
 and visit [the Godoc URL][]
 
