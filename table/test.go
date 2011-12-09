@@ -55,7 +55,7 @@ func tTest(t T) (err os.Error) {
 	place := "before"
 	defer func() {
 		if e := recover(); e != nil {
-			err = errorf("panic %s test; %v", place, e)
+			err = Fatalf("panic %s test; %v", place, e)
 		}
 	}()
 	switch t.(type) {
@@ -70,7 +70,7 @@ func tTest(t T) (err os.Error) {
 	place = "during"
 	defer func() {
 		if e := recover(); e != nil {
-			err = errorf("panic during test; %v", e)
+			err = Fatalf("panic during test; %v", e)
 		}
 	}()
 	err = t.Test()
