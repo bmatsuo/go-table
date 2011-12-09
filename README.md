@@ -60,7 +60,7 @@ type flagtest struct { in, out string }
 
 func (test flagtest) Test() (err os.Error) {
     if s := Sprintf(test.in, new(flagPrinter)); s != test.out {
-        err = Errorf("Sprintf(%q, &fp) => %q, want %q", test.in, s, test.out)
+        err = Errorf("Sprintf(%q, new(flagPrinter)) => %q, want %q", test.in, s, test.out)
     }
     return
 }
