@@ -14,12 +14,9 @@ What is Go-table?
 -----------------
 
 Go-table provides package "table" to facilitate [table driven testing in Go][].
-Table driven tests are not difficult to write once you get the have of them.
-But, they're quite effective once writtren.
-
-Tests with Go-table are implemented as methods of a type defined in the test
-file. The generally reduce the actual Test&ast; function used by "testing" to
-a single line.
+Table driven tests are not difficult to write once you get the hang of it.
+Once that happens, they are a very effective tool for many unit-testing
+applications.
 
 Table tests in Go are awesome witout Go-table. Why use it?
 ----------------------------------------------------------
