@@ -59,8 +59,7 @@ table package.
 type flagtest struct { in, out string }
 
 func (test flagtest) Test() (err os.Error) {
-    var fp flagPrinter
-    if s := Sprintf(test.in, &fp); s != test.out {
+    if s := Sprintf(test.in, new(flagPrinter)); s != test.out {
         err = Errorf("Sprintf(%q, &fp) => %q, want %q", test.in, s, test.out)
     }
     return
