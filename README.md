@@ -1,4 +1,3 @@
-
 [install go]: http://golang.org/install.html "Install Go"
 [gopkgdoc]: http://gopkgdoc.appspot.com/pkg/github.com/bmatsuo/go-table/table "GoPkgDoc"
 [the godoc url]: http://localhost:6060/pkg/github.com/bmatsuo/go-table/table/ "the Godoc URL"
@@ -26,7 +25,7 @@ already quite clean and conise even without Go-table. Go-table is merely trying
 to squeeze a little more awesomeness out of this Go-friendly testing paradigm.
 
 Go-table encourages [DRY][] coding. The code contained in your test files should
-only be repetitive in structure (so that writing it is easy). Any looping or
+only be repetitive in structure (so writing them is easy). Any looping or
 logging constructs that are used in *every* test function should be absolutely
 minimal, if not handled for you automatically.
 
@@ -43,8 +42,8 @@ Features
 Documentation
 =============
 
-General Documentation
----------------------
+API Documentation
+-----------------
 
 Documentation at [GoPkgDoc][] should be fairly recent.
 
@@ -94,8 +93,8 @@ func TestFlagParser(t *testing.T) {
 
 [original example][table driven testing in go]
 
-The example isn't vastly shorter, or less complex than the original example, but
-the boiler-plate looping is gone and the modularity eliminates the need for any
+The example isn't vastly shorter, or less complex than the original, but the
+boiler-plate looping is gone and the modularity eliminates the need for any
 extra helper functions.
 
 A close inspection also reveals that the test index `i` is no longer included in
@@ -105,16 +104,16 @@ you automatically.
 These improvements are small, but eliminating this repitive code from virtually
 every unit test written is definitely *a win* in the big picture.
 
-Installing Go-table
-===================
+Installation
+============
 
 Prerequisites
 -------------
 
-[Install Go][].
+[Go][install go].
 
-Installation
--------------
+Installing
+----------
 
     goinstall github.com/bmatsuo/go-table/table
 
