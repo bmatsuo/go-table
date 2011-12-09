@@ -96,14 +96,20 @@ func TestFlagParser(t *testing.T) {
 
 The example isn't vastly shorter, or less complex than the original, but the
 boiler-plate looping is gone and the modularity eliminates the need for any
-extra helper functions.
+extra helper functions. A close inspection also reveals that the test index `i`
+is no longer included in the error message, because the table package prepends
+test index information for you automatically. These improvements are small, but
+eliminating this repitive code from virtually every unit test written is
+definitely *a win* in the big picture.
 
-A close inspection also reveals that the test index `i` is no longer included in
-the error message, because the table package prepends test index information for
-you automatically.
+If any of these tests were to have errors, say index 3 (`{"%#a", "[%#a]"}`), it
+would have an error message like.
 
-These improvements are small, but eliminating this repitive code from virtually
-every unit test written is definitely *a win* in the big picture.
+    flagtest 3: Sprintf("%#a", new(flagPrinter)) => "[%#foo]", want "[%#a]"
+
+The unexpected output `"[%#foo]"` is clearly bogus. But, the idea here is that
+the test recieved its own name (type + slice index). And, that the error message
+printed includes the string of the error returned by flagtest's Test method.
 
 Installation
 ============
