@@ -21,8 +21,7 @@ var (
 	MsgFmt  = "%s: %s" // Result output format. Can be changed to another 2-argument string.
 )
 
-// Error which can be returned by a T's Test method to tell the Test
-// function that a test was skipped.
+// An error which can be returned by a T's Test method if the test was skipped.
 var ErrSkip = os.NewError("skip")
 
 /****************************/
