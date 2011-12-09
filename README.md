@@ -87,7 +87,7 @@ func TestFlagParser(t *testing.T) {
 }
 ```
 
-[original example](table driven testing in go)
+[original example][table driven testing in go]
 
 The example isn't vastly shorter, or less complex, but the boiler-plate looping
 is gone and the added modularity eliminates the need for any extra helper
