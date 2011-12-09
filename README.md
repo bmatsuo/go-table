@@ -75,7 +75,7 @@ func (test flagtest) Test() (err os.Error) {
 }
 
 func TestFlagParser(t *testing.T) {
-    table.Test([]flagtest{
+    table.Test(t, []flagtest{
         {"%a", "[%a]"},
         {"%-a", "[%-a]"},
         {"%+a", "[%+a]"},
