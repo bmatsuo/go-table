@@ -49,7 +49,7 @@ func doRange(v reflect.Value, fn interface{}) os.Error {
 func testSlice(t *testing.T, v reflect.Value) (err os.Error) {
 	err = doRange(v, func(i int, elem interface{}) (err os.Error) {
 		var e T
-		prefix := sprintf("%v %d", reflect.TypeOf(e), i)
+		prefix := sprintf("%v %d", reflect.TypeOf(elem), i)
 		if e, err = mustT(t, prefix, elem); err != nil {
 			if err == ErrSkip {
 				err = nil

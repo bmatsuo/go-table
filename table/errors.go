@@ -41,7 +41,7 @@ func errorf(format string, v ...interface{}) os.Error { return fmt.Errorf(format
 // Create a new os.Error using the string representation of v.
 func Error(v interface{}) os.Error { return errorf("%v", v) }
 // Create a new os.Error with a formatted string. Alias of fmt.Errorf.
-func Errorf(format string, v ...interface{}) os.Error { return errorf("%v", v) }
+func Errorf(format string, v ...interface{}) os.Error { return errorf(format, v...) }
 
 // An error that causes a table test to issue a fatal "testing" error to package
 // "testing".

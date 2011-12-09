@@ -1,30 +1,47 @@
 
 [install go]: http://golang.org/install.html "Install Go"
+[gopkgdoc]: http://gopkgdoc.appspot.com/pkg/github.com/bmatsuo/go-table/table "GoPkgDoc"
 [the godoc url]: http://localhost:6060/pkg/github.com/bmatsuo/go-table/table/ "the Godoc URL"
 [table driven testing in go]: http://code.google.com/p/go-wiki/wiki/TableDrivenTests "table driven testing in Go"
 [dry]: http://en.wikipedia.org/wiki/Don't_repeat_yourself "DRY"
 
-About Go-table
-==============
+Go-table
+========
 
-Go-table is a package to facilitate [table driven testing in go][]. Table
-driven tests are not difficult to write once you get the have of them. But,
-they're extremely quite effective once writtren.
+Don't write boiler-plate code. Write test code.
+
+What is Go-table?
+-----------------
+
+Go-table provides package "table" to facilitate [table driven testing in go][].
+Table driven tests are not difficult to write once you get the have of them.
+But, they're extremely quite effective once writtren.
 
 Tests with Go-table are implemented as methods of a type defined in the test
 file. The generally reduce the actual Test&ast; function used by "testing" to
 a single line.
 
-Go-table encourages [DRY][] testing. The code contained in test files should
-only be repetitive in structure (so that writing it is easy). Any
-looping/logging constructs that are used in *every* test function should be
-absolutely minimal. Table driven tests, combined with Go's relatively flexible
-anonomous type inference can create a lightweight, powerful, and minimalistic
-unit testing environment. Go-table aims to exploit these benefits while
-providing an interface with robust logging and error handling.
+Table tests in Go are awesome witout Go-table. Why use it?
+----------------------------------------------------------
 
-When you're writing tests, the only code you should be writing is test code.
+Table driven tests, combined with Go's flexible anonomous type inference are
+already quite clean and conise even without Go-table. Go-table is just trying to
+squeeze a little more awesomeness out of this testing paradigm.
+
+Go-table encourages [DRY][] coding. The code contained in your test files should
+only be repetitive in structure (so that writing it is easy). Any looping or
+logging constructs that are used in *every* test function should be absolutely
+minimal, if not handled for you automatically.
+
+When you're writing tests, the *only* code you should be writing is test code.
 Go-table tries to help get that done.
+
+Features
+--------
+
+- Obviously, easy automation of table tests is a key feature.
+- Convenient logging features to automatically name/identify (failed) tests.
+- Automatic handling of runtime panics uncaught by test code.
 
 Documentation
 =============
@@ -52,20 +69,22 @@ func (test flagtest) Test() (err os.Error) {
     return
 }
 
-func TestFlagParser(t *testing.T) { table.Test([]flagtest{
-    {"%a", "[%a]"},
-    {"%-a", "[%-a]"},
-    {"%+a", "[%+a]"},
-    {"%#a", "[%#a]"},
-    {"% a", "[% a]"},
-    {"%0a", "[%0a]"},
-    {"%1.2a", "[%1.2a]"},
-    {"%-1.2a", "[%-1.2a]"},
-    {"%+1.2a", "[%+1.2a]"},
-    {"%-+1.2a", "[%+-1.2a]"},
-    {"%-+1.2abc", "[%+-1.2a]bc"},
-    {"%-1.2abc", "[%-1.2a]bc"},
-}) }
+func TestFlagParser(t *testing.T) {
+    table.Test([]flagtest{
+        {"%a", "[%a]"},
+        {"%-a", "[%-a]"},
+        {"%+a", "[%+a]"},
+        {"%#a", "[%#a]"},
+        {"% a", "[% a]"},
+        {"%0a", "[%0a]"},
+        {"%1.2a", "[%1.2a]"},
+        {"%-1.2a", "[%-1.2a]"},
+        {"%+1.2a", "[%+1.2a]"},
+        {"%-+1.2a", "[%+-1.2a]"},
+        {"%-+1.2abc", "[%+-1.2a]bc"},
+        {"%-1.2abc", "[%-1.2a]bc"},
+    })
+}
 ```
 
 [original example](table driven testing in go)
@@ -96,7 +115,9 @@ Use goinstall to install go-table
 General Documentation
 ---------------------
 
-Use godoc to vew the documentation for go-table
+The latest documentation should be available on [GoPkgDoc][].
+
+To view documentation for your local Go-table installation, use godoc
 
     godoc github.com/bmatsuo/go-table/table
 
