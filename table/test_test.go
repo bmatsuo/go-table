@@ -9,6 +9,7 @@ package table
 import (
 	"testing"
 	"strings"
+	"regexp"
 	"os"
 )
 
@@ -62,5 +63,92 @@ func TestTTest(t *testing.T) {
 				}
 			}
 		}
+	}
+}
+
+type tTestExtraTest struct {
+	before, after func()
+	verify        func() os.Error
+	exp           interface{}
+	errpatt       string
+}
+
+func (test tTestExtraTest) Test() (err os.Error) {
+	return test.verify()
+	return
+}
+
+func fnCallNonNil(fn func()) {
+	if fn != nil {
+		fn()
+	}
+}
+func (test tTestExtraTest) Before() { fnCallNonNil(test.before) }
+func (test tTestExtraTest) After()  { fnCallNonNil(test.after) }
+func (test tTestExtraTest) Panics() (exps []PanicExpectation) {
+	switch test.exp.(type) {
+	case string:
+		if sub := test.exp.(string); sub != "" {
+			return append(exps, sub)
+		}
+	default:
+		if p := test.exp; p == nil {
+			return append(exps, p)
+		}
+	}
+	return
+}
+
+var tTestExtraTestInt = new(int)
+
+func tTestPanicTest(msg string) func() os.Error { return func() os.Error { panic(msg) } }
+func tTestPanic(msg string) func()              { return func() { panic(msg) } }
+func tTestBeforeInt(plus int) func()            { return func() { (*tTestExtraTestInt) += plus } }
+func tTestAfterInt(minus int) func()            { return func() { (*tTestExtraTestInt) -= minus } }
+func tTestNoOpTest() func() os.Error            { return func() os.Error { return nil } }
+func tTestNoOp() func()                         { return func() {} }
+func tTestVerifyInt(x int) func() os.Error {
+	return func() os.Error {
+		if y := (*tTestExtraTestInt); y != x {
+			return Errorf("test integer value %d != %d", y, x)
+		}
+		return nil
+	}
+}
+
+var tTestExtraTests = []tTestExtraTest{
+	{nil, nil, func() os.Error { return nil }, "", ""}, // Sanity test.
+	{nil, nil, tTestPanicTest("gophers"), "gophers", ""},
+	{nil, nil, tTestPanicTest("gophers"), regexp.MustCompile("gophers?"), ""},
+	{nil, nil, tTestPanicTest("gophers"), func(pstr string) os.Error {
+		if pstr != "gophers" {
+			return Errorf("unexpected panic: %s", pstr)
+		}
+		return nil
+	}, ""},
+
+	// Order is important for next group.
+	{tTestBeforeInt(1), nil, tTestVerifyInt(1), "", ""},              // Tests Before call.
+	{nil, tTestAfterInt(1), tTestVerifyInt(1), "", ""},               // Ensures the value of the integer is persistant.
+	{tTestBeforeInt(3), tTestAfterInt(3), tTestVerifyInt(3), "", ""}, // Tests After call.
+	{tTestBeforeInt(1), tTestAfterInt(1), tTestVerifyInt(1), "", ""}, // Tests both Before and After work togeter.
+
+	{tTestPanic("gophers"), tTestNoOp(), tTestNoOpTest(), "", "before.*gophers"},
+	{tTestNoOp(), tTestPanic("gophers"), tTestNoOpTest(), "", "after.*gophers"},
+}
+
+func TestTTestExtraTests(t *testing.T) {
+	for i, test := range tTestExtraTests {
+		prefix := sprintf("extra functionality test %d:", i)
+		var err os.Error
+		switch err = tTest(test); {
+		case err == nil && test.errpatt == "":
+			return
+		case err == nil:
+			t.Errorf("%s missing expected error: %s", prefix, test.errpatt)
+		case !regexp.MustCompile(test.errpatt).MatchString(err.String()):
+			t.Errorf("%s unexpected error (not %s): %v", prefix, test.errpatt, err)
+		}
+		t.Errorf("%s unexpected error: %v", prefix, err)
 	}
 }

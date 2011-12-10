@@ -153,31 +153,31 @@ func tTest(t T) (err os.Error) {
 		defer t.(TAfter).After()
 	}
 	place = "during"
+	defer func() { place = "after" }()
 	defer func() {
+		panicv := recover()
 		switch t.(type) {
 		case TPanics:
 			exps, err := getTPanicsExpectations(t.(TPanics))
-			hasexp := len(exps) > 0
 			if err != nil {
 				err = Errorf("error retrieving PanicExpectations: %v", err)
-			} else if e := recover(); e != nil {
+			} else if hasexp := len(exps) > 0; panicv != nil {
 				if hasexp {
-					err = applyPanicExpectations(exps, sprint(e))
+					err = applyPanicExpectations(exps, sprint(panicv))
 				} else {
-					err = Errorf("unexpected panic: %v", e)
+					err = Errorf("unexpected panic: %v", panicv)
 				}
 			} else {
 				if hasexp {
 					err = Errorf("test did not panic as expected %v", exps)
 				}
 			}
-		default:
-			if e := recover(); e != nil {
-				err = Errorf("panic: %v", e)
-			}
+			return
+		}
+		if panicv != nil {
+			err = Errorf("panic: %v", panicv)
 		}
 	}()
 	err = t.Test()
-	place = "after"
 	return
 }
