@@ -140,7 +140,7 @@ func tTest(t T) (err os.Error) {
 	place := "before"
 	defer func() {
 		if e := recover(); e != nil {
-			err = Fatalf("panic %s test; %v", place, e)
+			err = Errorf("panic %s test; %v", place, e)
 		}
 	}()
 	switch t.(type) {
