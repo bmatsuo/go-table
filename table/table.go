@@ -30,7 +30,7 @@ import (
 
 func value(src string, index, v reflect.Value, zero reflect.Value) reflect.Value {
 	switch {
-	case v.IsNil():
+	case v.Interface() == nil:
 		return zero
 	case !v.IsValid():
 		panic(errorf("invalid value in %s index %v", src, index.Interface()))
@@ -47,7 +47,7 @@ func doRange(v reflect.Value, fn interface{}) os.Error {
 	if numin := fntyp.NumIn(); numin != 2 {
 		panic(errorf("doRange function of %d arguments %v", numin, fn))
 	}
-	if numout := fntyp.NumOut(); numout != 2 {
+	if numout := fntyp.NumOut(); numout != 1 {
 		panic(errorf("doRange function of %d return values %v", numout, fn))
 	}
 	zero := reflect.Zero(fnval.Type().In(1))
@@ -92,28 +92,60 @@ func doRange(v reflect.Value, fn interface{}) os.Error {
 	return nil
 }
 
-// Test each value in a slice table.
-func testSlice(t *testing.T, v reflect.Value) (err os.Error) {
-	err = doRange(v, func(i int, elem interface{}) (err os.Error) {
-		var e T
-		prefix := sprintf("%v %d", reflect.TypeOf(elem), i)
-		if e, err = mustT(t, prefix, elem); err != nil {
-			if err == ErrSkip {
-				err = nil
-				if Verbose {
-					t.Logf("%s skipped", prefix, i)
-				}
-			} else {
-				t.Fatal(err)
+type stringer interface {
+	String() string
+}
+
+func testCastT(t *testing.T, prefix string, v interface{}) (test T, err os.Error) {
+	if test, err = mustT(t, prefix, v); err != nil {
+		if err == ErrSkip {
+			if Verbose {
+				t.Logf("%s skipped", prefix)
 			}
-			return
-		}
-		if !error(t, prefix, tTest(e)) && Verbose {
-			t.Logf("%s passed", prefix, i)
+			err = nil
+		} else {
+			t.Fatal(err)
 		}
 		return
-	})
+	}
 	return
+}
+
+func testExecute(t *testing.T, prefix string, test T) {
+	if !error(t, prefix, tTest(test)) && Verbose {
+		t.Logf("%s passed", prefix)
+	}
+}
+
+func testMap(t *testing.T, v reflect.Value) os.Error {
+	i := new(int)
+	return doRange(v, func(k, v interface{}) (err os.Error) {
+		var prefix string
+		switch k.(type) {
+		case string:
+			prefix = k.(string)
+		case stringer:
+			prefix = k.(stringer).String()
+		default:
+			prefix = sprintf("%v %d", reflect.TypeOf(k).String(), *i)
+		}
+		var test T
+		test, err = testCastT(t, prefix, v)
+		testExecute(t, prefix, test)
+		(*i)++
+		return
+	})
+}
+
+// Test each value in a slice table.
+func testSlice(t *testing.T, v reflect.Value) os.Error {
+	return doRange(v, func(i int, elem interface{}) (err os.Error) {
+		prefix := sprintf("%v %d", reflect.TypeOf(elem), i)
+		var test T
+		test, err = testCastT(t, prefix, elem)
+		testExecute(t, prefix, test)
+		return
+	})
 }
 
 // Detect a value's reflect.Kind. Return the reflect.Value as well for good measure.
@@ -134,7 +166,7 @@ func Test(t *testing.T, table interface{}) {
 	switch k {
 	case reflect.Invalid:
 		fatal(t, prefix, errorf("table is invalid"))
-	case reflect.Slice: // Allow chan/map?
+	case reflect.Slice, reflect.Map: // Allow chan?
 		break
 	default:
 		fatal(t, prefix, errorf("table %s is not a slice", val.Type().String()))
@@ -149,6 +181,10 @@ func Test(t *testing.T, table interface{}) {
 	switch k {
 	case reflect.Slice:
 		if testSlice(t, val) != nil {
+			return
+		}
+	case reflect.Map:
+		if testMap(t, val) != nil {
 			return
 		}
 	default:
