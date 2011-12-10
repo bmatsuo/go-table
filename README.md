@@ -70,10 +70,11 @@ table package.
 type flagtest struct { in, out string }
 
 func (test flagtest) Test() (err os.Error) {
-    if s := Sprintf(test.in, new(flagPrinter)); s != test.out {
-        err = Errorf("Sprintf(%q, new(flagPrinter)) => %q, want %q", test.in, s, test.out)
+    var flagprinter flagPrinter
+    s := Sprintf(tt.in, &flagprinter)
+    if s != tt.out {
+            t.Errorf("%d. Sprintf(%q, &flagprinter) => %q, want %q", i, tt.in, s, tt.out)
     }
-    return
 }
 
 func TestFlagParser(t *testing.T) {
@@ -98,14 +99,20 @@ func TestFlagParser(t *testing.T) {
 
 The example isn't vastly shorter, or less complex than the original, but the
 boiler-plate looping is gone and the modularity eliminates the need for any
-extra helper functions. A close inspection also reveals that the test index `i`
-is no longer included in the error message, because the table package prepends
-test index information for you automatically. These improvements are small, but
-eliminating this repitive code from virtually every unit test written is
-definitely *a win* in the big picture.
+extra helper functions. The last major difference is that the table is used
+anonymously. Another small change, but worth noting because in the original
+example, it's impossible to use the table as an anonymous slice.
 
-If any of these tests were to have errors, say index 3 (`{"%#a", "[%#a]"}`), it
-would have an error message like.
+A close inspection also reveals that the test index `i` is no longer included in
+the error message, because the table package prepends test index information for
+you automatically when it logs the error.
+
+The one cool thing the original example does and which is not done above is use
+a table of anonymous structs. This is obviously impossible using Go-table, because
+there is no way to define a method for an anonymous type. But there is a benifit
+for using a table of named types with Go-table. If any of these tests were to
+have errors, say index 3 (`{"%#a", "[%#a]"}`), it would have an error message
+with the form
 
     flagtest 3: Sprintf("%#a", new(flagPrinter)) => "[%#foo]", want "[%#a]"
 
@@ -129,6 +136,7 @@ Installing
 or
 
     git clone https://github.com/bmatsuo/go-table
+    cd go-table/table
     gomake install
 
 
