@@ -28,14 +28,61 @@ import (
 	"os"
 )
 
+func value(src string, index, v reflect.Value, zero reflect.Value) reflect.Value {
+	switch {
+	case v.IsNil():
+		return zero
+	case !v.IsValid():
+		panic(errorf("invalid value in %s index %v", src, index.Interface()))
+	}
+	return v
+}
+
 // Iterate over a range of values, issuing a callback for each one. The callback
 // fn is expected to take two arguments (index/key, value pair) and return an
 // os.Error.
 func doRange(v reflect.Value, fn interface{}) os.Error {
+	fnval := reflect.ValueOf(fn)
+	fntyp := fnval.Type()
+	if numin := fntyp.NumIn(); numin != 2 {
+		panic(errorf("doRange function of %d arguments %v", numin, fn))
+	}
+	if numout := fntyp.NumOut(); numout != 2 {
+		panic(errorf("doRange function of %d return values %v", numout, fn))
+	}
+	zero := reflect.Zero(fnval.Type().In(1))
+	var out reflect.Value
 	switch k := v.Kind(); k {
 	case reflect.Slice:
 		for i, n := 0, v.Len(); i < n; i++ {
-			if out := reflect.ValueOf(fn).Call([]reflect.Value{reflect.ValueOf(i), v.Index(i)})[0]; !out.IsNil() {
+			ival, vval := reflect.ValueOf(i), v.Index(i)
+			arg := value("slice", ival, vval, zero)
+			out = fnval.Call([]reflect.Value{ival, arg})[0]
+			if !out.IsNil() {
+				return out.Interface().(os.Error)
+			}
+
+		}
+	case reflect.Map:
+		for _, kval := range v.MapKeys() {
+			vval := v.MapIndex(kval)
+			arg := value("map", kval, vval, zero)
+			out = fnval.Call([]reflect.Value{kval, arg})[0]
+			if !out.IsNil() {
+				return out.Interface().(os.Error)
+			}
+		}
+	case reflect.Chan:
+		var vval reflect.Value
+		var ok bool
+		for i := 0; true; i++ {
+			ival := reflect.ValueOf(i)
+			if vval, ok = v.Recv(); !ok {
+				break
+			}
+			arg := value("chan", ival, vval, zero)
+			out = fnval.Call([]reflect.Value{ival, arg})[0]
+			if !out.IsNil() {
 				return out.Interface().(os.Error)
 			}
 		}
