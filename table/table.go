@@ -28,7 +28,7 @@ import (
 	"os"
 )
 
-func value(src string, index, v reflect.Value, zero reflect.Value) reflect.Value {
+func validValue(src string, index, v reflect.Value, zero reflect.Value) reflect.Value {
 	switch {
 	case v.Interface() == nil:
 		return zero
@@ -56,7 +56,7 @@ func doRange(v reflect.Value, fn interface{}) os.Error {
 	case reflect.Slice:
 		for i, n := 0, v.Len(); i < n; i++ {
 			ival, vval := reflect.ValueOf(i), v.Index(i)
-			arg := value("slice", ival, vval, zero)
+			arg := validValue("slice", ival, vval, zero)
 			out = fnval.Call([]reflect.Value{ival, arg})[0]
 			if !out.IsNil() {
 				return out.Interface().(os.Error)
@@ -66,7 +66,7 @@ func doRange(v reflect.Value, fn interface{}) os.Error {
 	case reflect.Map:
 		for _, kval := range v.MapKeys() {
 			vval := v.MapIndex(kval)
-			arg := value("map", kval, vval, zero)
+			arg := validValue("map", kval, vval, zero)
 			out = fnval.Call([]reflect.Value{kval, arg})[0]
 			if !out.IsNil() {
 				return out.Interface().(os.Error)
@@ -80,7 +80,7 @@ func doRange(v reflect.Value, fn interface{}) os.Error {
 			if vval, ok = v.Recv(); !ok {
 				break
 			}
-			arg := value("chan", ival, vval, zero)
+			arg := validValue("chan", ival, vval, zero)
 			out = fnval.Call([]reflect.Value{ival, arg})[0]
 			if !out.IsNil() {
 				return out.Interface().(os.Error)
