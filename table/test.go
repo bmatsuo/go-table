@@ -13,6 +13,8 @@ package table
 import (
 	"testing"
 	"reflect"
+	"strings"
+	"regexp"
 	"os"
 )
 
@@ -20,6 +22,86 @@ import (
 // called Test to fail. A FatalError retured by Test stops the table test.
 type T interface {
 	Test() os.Error // Execute the test described by the object.
+}
+
+// These types act on strings values of uncaught panics inside Test() the
+// type's test method.  Acceptable value types are substrings,
+// *regexp.Regexp, or func(string) os.Error objects.
+type PanicExpectation interface{}
+
+func acceptablePanicExpectation(exp PanicExpectation) os.Error {
+	switch exp.(type) {
+	case nil:
+		return Error("nil PanicExpectation")
+	case string, *regexp.Regexp, func(string) os.Error:
+		return nil
+	}
+	return Errorf("unacceptable PanicExpectation type %s", reflect.TypeOf(exp))
+}
+
+func applyPanicExpectation(exp PanicExpectation, pstr string) (err os.Error) {
+	switch exp.(type) {
+	case *regexp.Regexp:
+		r := exp.(*regexp.Regexp)
+		if !r.MatchString(pstr) {
+			err = Fatalf("unexpected panic (doesn't match %v): %s", r, pstr)
+		}
+	case string:
+		if strings.Index(pstr, exp.(string)) < 0 {
+			err = Fatalf("unexpected panic (doesn't contain %#v): %s", exp, pstr)
+		}
+	case func(string) os.Error:
+		if err := exp.(func(string) os.Error)(pstr); err != nil {
+			err = Fatalf("panic callback error: %s", err)
+		}
+	}
+	return
+}
+
+type indexedError struct {
+	index int
+	Err   os.Error
+}
+
+func (err indexedError) String() string { return err.Err.String() }
+
+func applyPanicExpectations(exps []PanicExpectation, pstr string) (err os.Error) {
+	var errs []indexedError
+	for i, exp := range exps {
+		if e := applyPanicExpectation(exp, pstr); e != nil {
+			errs = append(errs, indexedError{i, e})
+		}
+	}
+	if len(errs) > 0 {
+		if e := errs[0]; len(errs) == 1 {
+			err = Fatalf("PanicExpectation %d failure: %v", e.index, e)
+			return
+		}
+		err = Fatal("PanicExpectation failure")
+		for _, e := range errs {
+			err = Fatalf("%s\n\texpectation %d: %v", err, e.index, e)
+		}
+	}
+	return
+}
+
+type TPanics interface {
+	T // TPanics is a TType.
+	Panics() []PanicExpectation
+}
+
+func getTPanicsExpectations(test TPanics) (exps []PanicExpectation, err os.Error) {
+	if test == nil {
+		return nil, Error("nil test")
+	}
+	exps = test.Panics()
+	for i, exp := range exps {
+		if err = acceptablePanicExpectation(exp); err == nil {
+			err = Errorf("PanicExpectation %d type error: %v", i, err)
+			return
+		}
+	}
+	return
 }
 
 type TBefore interface {
@@ -72,8 +154,27 @@ func tTest(t T) (err os.Error) {
 	}
 	place = "during"
 	defer func() {
-		if e := recover(); e != nil {
-			err = Fatalf("panic during test; %v", e)
+		switch t.(type) {
+		case TPanics:
+			exps, err := getTPanicsExpectations(t.(TPanics))
+			hasexp := len(exps) > 0
+			if err != nil {
+				err = Errorf("error retrieving PanicExpectations: %v", err)
+			} else if e := recover(); e != nil {
+				if hasexp {
+					err = applyPanicExpectations(exps, sprint(e))
+				} else {
+					err = Errorf("unexpected panic: %v", e)
+				}
+			} else {
+				if hasexp {
+					err = Errorf("test did not panic as expected %v", exps)
+				}
+			}
+		default:
+			if e := recover(); e != nil {
+				err = Errorf("panic: %v", e)
+			}
 		}
 	}()
 	err = t.Test()

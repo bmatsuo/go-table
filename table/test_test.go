@@ -25,7 +25,7 @@ var tTestTests = []tTestTest{
 	{func() os.Error { return nil }, false, nil},
 	{func() os.Error { return os.NewError("emsg") }, false, []string{"emsg"}},
 	{func() os.Error { return Fatal("fmsg") }, true, []string{"fmsg"}},
-	{func() os.Error { panic("pmsg") }, true, []string{"pmsg"}},
+	{func() os.Error { panic("pmsg") }, false, []string{"pmsg"}},
 }
 
 func TestTTest(t *testing.T) {
