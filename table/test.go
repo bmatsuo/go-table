@@ -51,6 +51,9 @@ func mustT(t *testing.T, name string, elem interface{}) (T, os.Error) {
 	return elem.(T), nil
 }
 
+// Execute t's Test method. If t is a TBefore type execute t.Before() prior to
+// t.Test(). If t is a TAfter type, execute t.After() after t.Test() returns.
+// Handles runtimes panics resulting from any of these callback.
 func tTest(t T) (err os.Error) {
 	place := "before"
 	defer func() {
