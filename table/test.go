@@ -86,8 +86,8 @@ func applyPanicExpectations(exps []PanicExpectation, pstr string) (err os.Error)
 }
 
 type TPanics interface {
-	T // TPanics is a TType.
-	Panics() []PanicExpectation
+	T                           // TPanics is a TType.
+	Panics() []PanicExpectation // TPanics when non-nil, certain panics expected.
 }
 
 func getTPanicsExpectations(test TPanics) (exps []PanicExpectation, err os.Error) {
