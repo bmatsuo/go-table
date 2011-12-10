@@ -52,6 +52,8 @@ To view documentation for your local Go-table installation, start a Godoc web se
 
     godoc -http=:6060
 
+and visit [the Godoc URL][].
+
 An example
 ----------
 
@@ -127,11 +129,7 @@ Installing
 or
 
     git clone https://github.com/bmatsuo/go-table
-    pushd go-table/table
     gomake install
-    popd
-
-and visit [the Godoc URL][]
 
 
 Author
