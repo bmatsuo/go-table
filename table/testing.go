@@ -56,9 +56,9 @@ func (t *testingT) fatal(args ...interface{})                 { t.t.Fatal(sprint
 func (t *testingT) Log(args ...interface{})                   { t.log(t.msg(args...)) }
 func (t *testingT) Error(args ...interface{})                 { t.error(t.errmsg("error", args...)) }
 func (t *testingT) Fatal(args ...interface{})                 { t.fatal(t.errmsg("fatal", args...)) }
-func (t *testingT) Logf(format string, args ...interface{})   { t.log(t.msgf(format, args...)) }
-func (t *testingT) Errorf(format string, args ...interface{}) { t.error(t.msgf(format, args...)) }
-func (t *testingT) Fatalf(format string, args ...interface{}) { t.fatal(t.msgf(format, args...)) }
+func (t *testingT) Logf(format string, args ...interface{})   { t.Log(sprintf(format, args...)) }
+func (t *testingT) Errorf(format string, args ...interface{}) { t.Error(sprintf(format, args...)) }
+func (t *testingT) Fatalf(format string, args ...interface{}) { t.Fatal(sprintf(format, args...)) }
 
 type Testing interface {
 	Error(args ...interface{})
