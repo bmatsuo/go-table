@@ -21,7 +21,7 @@ import (
 // Non-nil values returned by the Test method will cause the table test that
 // called Test to fail. A FatalError retured by Test stops the table test.
 type T interface {
-	Test() os.Error // Execute the test described by the object.
+	Test(Testing) // Execute the test described by the object.
 }
 
 // These types act on strings values of uncaught panics inside Test() the
@@ -136,48 +136,48 @@ func mustT(t *testing.T, name string, elem interface{}) (T, os.Error) {
 // Execute t's Test method. If t is a TBefore type execute t.Before() prior to
 // t.Test(). If t is a TAfter type, execute t.After() after t.Test() returns.
 // Handles runtimes panics resulting from any of these callback.
-func tTest(t T) (err os.Error) {
+func tTest(t Testing, test T) {
 	place := "before"
 	defer func() {
 		if e := recover(); e != nil {
-			err = Errorf("panic %s test; %v", place, e)
+			t.Errorf("panic %s test; %v", place, e)
 		}
 	}()
-	switch t.(type) {
+	switch test.(type) {
 	case TBeforeAfter:
-		t.(TBefore).Before()
-		defer t.(TAfter).After()
+		test.(TBefore).Before()
+		defer test.(TAfter).After()
 	case TBefore:
-		t.(TBefore).Before()
+		test.(TBefore).Before()
 	case TAfter:
-		defer t.(TAfter).After()
+		defer test.(TAfter).After()
 	}
 	place = "during"
 	defer func() { place = "after" }()
 	defer func() {
 		panicv := recover()
-		switch t.(type) {
+		switch test.(type) {
 		case TPanics:
-			exps, err := getTPanicsExpectations(t.(TPanics))
-			if err != nil {
-				err = Errorf("error retrieving PanicExpectations: %v", err)
+			if exps, err := getTPanicsExpectations(test.(TPanics)); err != nil {
+				t.Errorf("error retrieving PanicExpectations: %v", err)
 			} else if hasexp := len(exps) > 0; panicv != nil {
 				if hasexp {
-					err = applyPanicExpectations(exps, sprint(panicv))
+					if err = applyPanicExpectations(exps, sprint(panicv)); err != nil {
+						t.Error(err)
+					}
 				} else {
-					err = Errorf("unexpected panic: %v", panicv)
+					t.Errorf("unexpected panic: %v", panicv)
 				}
 			} else {
 				if hasexp {
-					err = Errorf("test did not panic as expected %v", exps)
+					t.Errorf("test did not panic as expected %v", exps)
 				}
 			}
 			return
 		}
 		if panicv != nil {
-			err = Errorf("panic: %v", panicv)
+			t.Errorf("panic: %v", panicv)
 		}
 	}()
-	err = t.Test()
-	return
+	test.Test(t)
 }

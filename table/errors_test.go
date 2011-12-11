@@ -18,13 +18,12 @@ type errorStringTest struct {
 	matches []string
 }
 
-func (test errorStringTest) Test() os.Error {
+func (test errorStringTest) Test(t Testing) {
 	for i, r := range test.matches {
 		if !regexp.MustCompile(r).MatchString(test.err.String()) {
-			return Errorf("pattern %d (%s) doesn't match error string: %v", i, r, test.err)
+			t.Errorf("pattern %d (%s) doesn't match error string: %v", i, r, test.err)
 		}
 	}
-	return nil
 }
 
 // This table test is a little wonky because I set the Verbose global option for half of the tests.
@@ -49,8 +48,6 @@ func TestErrorString(t *testing.T) {
 	}...)
 
 	for i, test := range errorStringTests {
-		if err := tTest(test); err != nil {
-			t.Errorf("errorStringTest %d: %v", i, err)
-		}
+		tTest(newTestingT(sprintf("errorStringTest %d", i), t), test)
 	}
 }

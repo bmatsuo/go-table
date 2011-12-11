@@ -8,58 +8,40 @@ package table
 
 import (
 	"testing"
-	"strings"
 	"regexp"
 	"os"
 )
 
 // Test the internal tTest function.
 type tTestTest struct {
-	fn    func() os.Error
-	fatal bool
+	fn    func(t Testing)
 	esubs []string
 }
 
-func (test tTestTest) Test() os.Error { return test.fn() }
+func (test tTestTest) Test(t Testing) { test.fn(t) }
 
 var tTestTests = []tTestTest{
-	{func() os.Error { return nil }, false, nil},
-	{func() os.Error { return os.NewError("emsg") }, false, []string{"emsg"}},
-	{func() os.Error { return Fatal("fmsg") }, true, []string{"fmsg"}},
-	{func() os.Error { panic("pmsg") }, false, []string{"pmsg"}},
+	{func(t Testing) {}, nil},
+	{func(t Testing) { t.Error(os.NewError("emsg")) }, []string{"emsg"}},
+	{func(t Testing) { t.Fatal("fmsg") }, []string{"fmsg"}},
+	{func(t Testing) { panic("pmsg") }, []string{"pmsg"}},
 }
 
 func TestTTest(t *testing.T) {
 	for i, test := range tTestTests {
-		switch err := tTest(test); {
-		case err == nil && (test.esubs != nil || test.fatal):
-			if test.fatal {
-				t.Errorf("tTestTest %d: unexpected nil error (not fatal %v)", i, test.esubs)
-			} else {
-				t.Errorf("tTestTest %d: unexpected nil error (not %v)", i, test.esubs)
-			}
-		case err == nil:
+		prefix := sprintf("tTestTest %d", i)
+		ft := fauxTest(prefix, func(t Testing) { tTest(t, test) })
+		switch failed := ft.failed; {
+		case !failed && test.esubs == nil:
 			break
-		case test.esubs == nil && !test.fatal:
-			t.Errorf("tTestTest %d: unexpected error %v", i, err)
+		case !failed:
+			t.Errorf("%s: unexpected nil error (not %v)", prefix, test.esubs)
+		case test.esubs == nil:
+			t.Errorf("%s: unexpected error %v", prefix, ft.log)
 		default:
-			var fatal bool
-			switch err.(type) {
-			case FatalError:
-				fatal = true
-			default:
-			}
-			if test.fatal != fatal {
-				if fatal {
-					t.Errorf("tTestTest %d: unexpected fatal error %v", err)
-				} else {
-					t.Errorf("tTestTest %d: unexpected non-fatal error %v", err)
-				}
-			}
 			for j, sub := range test.esubs {
-				estr := err.String()
-				if strings.Index(estr, sub) < 0 {
-					t.Errorf("tTestTest %d: error missing substring %d; %s", i, j, estr)
+				if !ft.logLike(sub) {
+					t.Errorf("%s: error missing pattern %d %#v; %#v", prefix, j, sub, ft.log)
 				}
 			}
 		}
@@ -68,15 +50,12 @@ func TestTTest(t *testing.T) {
 
 type tTestExtraTest struct {
 	before, after func()
-	verify        func() os.Error
+	verify        func(Testing)
 	exp           interface{}
 	errpatt       string
 }
 
-func (test tTestExtraTest) Test() (err os.Error) {
-	return test.verify()
-	return
-}
+func (test tTestExtraTest) Test(t Testing) { test.verify(t) }
 
 func fnCallNonNil(fn func()) {
 	if fn != nil {
@@ -101,23 +80,22 @@ func (test tTestExtraTest) Panics() (exps []PanicExpectation) {
 
 var tTestExtraTestInt = new(int)
 
-func tTestPanicTest(msg string) func() os.Error { return func() os.Error { panic(msg) } }
-func tTestPanic(msg string) func()              { return func() { panic(msg) } }
-func tTestBeforeInt(plus int) func()            { return func() { (*tTestExtraTestInt) += plus } }
-func tTestAfterInt(minus int) func()            { return func() { (*tTestExtraTestInt) -= minus } }
-func tTestNoOpTest() func() os.Error            { return func() os.Error { return nil } }
-func tTestNoOp() func()                         { return func() {} }
-func tTestVerifyInt(x int) func() os.Error {
-	return func() os.Error {
+func tTestPanicTest(msg string) func(Testing) { return func(Testing) { panic(msg) } }
+func tTestPanic(msg string) func()            { return func() { panic(msg) } }
+func tTestBeforeInt(plus int) func()          { return func() { (*tTestExtraTestInt) += plus } }
+func tTestAfterInt(minus int) func()          { return func() { (*tTestExtraTestInt) -= minus } }
+func tTestNoOpTest() func(Testing)            { return func(Testing) {} }
+func tTestNoOp() func()                       { return func() {} }
+func tTestVerifyInt(x int) func(Testing) {
+	return func(t Testing) {
 		if y := (*tTestExtraTestInt); y != x {
-			return Errorf("test integer value %d != %d", y, x)
+			t.Errorf("test integer value %d != %d", y, x)
 		}
-		return nil
 	}
 }
 
 var tTestExtraTests = []tTestExtraTest{
-	{nil, nil, func() os.Error { return nil }, "", ""}, // Sanity test.
+	{nil, nil, func(t Testing) {}, "", ""}, // Sanity test.
 	{nil, nil, tTestPanicTest("gophers"), "gophers", ""},
 	{nil, nil, tTestPanicTest("gophers"), regexp.MustCompile("gophers?"), ""},
 	{nil, nil, tTestPanicTest("gophers"), func(pstr string) os.Error {
@@ -140,15 +118,16 @@ var tTestExtraTests = []tTestExtraTest{
 func TestTTestExtraTests(t *testing.T) {
 	for i, test := range tTestExtraTests {
 		prefix := sprintf("extra functionality test %d:", i)
-		var err os.Error
-		switch err = tTest(test); {
-		case err == nil && test.errpatt == "":
+		ft := fauxTest(prefix, func(t Testing) { tTest(t, test) })
+		switch failed := ft.failed; {
+		case !failed && test.errpatt == "":
 			return
-		case err == nil:
+		case !failed:
 			t.Errorf("%s missing expected error: %s", prefix, test.errpatt)
-		case !regexp.MustCompile(test.errpatt).MatchString(err.String()):
-			t.Errorf("%s unexpected error (not %s): %v", prefix, test.errpatt, err)
+		case test.errpatt == "":
+			t.Errorf("%s unexpected error: %v", prefix, ft.log)
+		case !ft.logLike(test.errpatt):
+			t.Errorf("%s unexpected error (not %s): %v", prefix, test.errpatt, ft.log)
 		}
-		t.Errorf("%s unexpected error: %v", prefix, err)
 	}
 }

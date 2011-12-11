@@ -111,11 +111,7 @@ func testCastT(t *testing.T, prefix string, v interface{}) (test T, err os.Error
 	return
 }
 
-func testExecute(t *testing.T, prefix string, test T) {
-	if !error(t, prefix, tTest(test)) && Verbose {
-		t.Logf("%s passed", prefix)
-	}
-}
+func testExecute(t *testing.T, prefix string, test T) { tTest(newTestingT(prefix, t), test) }
 
 func testMap(t *testing.T, v reflect.Value) os.Error {
 	i := new(int)
