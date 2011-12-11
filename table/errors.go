@@ -29,7 +29,7 @@ var ErrSkip = os.NewError("skip")
 /****************************/
 
 // Aliases to "fmt" functions.
-func sprint(v interface{}) string                     { return fmt.Sprint(v) }
+func sprint(v ...interface{}) string                  { return fmt.Sprint(v...) }
 func sprintf(format string, v ...interface{}) string  { return fmt.Sprintf(format, v...) }
 func errorf(format string, v ...interface{}) os.Error { return fmt.Errorf(format, v...) }
 
@@ -38,7 +38,7 @@ func errorf(format string, v ...interface{}) os.Error { return fmt.Errorf(format
 /***********************************************/
 
 // Create a new os.Error using the string representation of v.
-func Error(v interface{}) os.Error { return errorf("%v", v) }
+func Error(v ...interface{}) os.Error { return os.NewError(sprint(v...)) }
 // Create a new os.Error with a formatted string. Alias of fmt.Errorf.
 func Errorf(format string, v ...interface{}) os.Error { return errorf(format, v...) }
 
@@ -49,7 +49,7 @@ type FatalError struct{ os.Error }
 func (f FatalError) String() string { return f.Error.String() }
 
 // Create a new FatalError using the string representation of v.
-func Fatal(v interface{}) FatalError                    { return FatalError{errorf("%v", v)} }
+func Fatal(v interface{}) FatalError { return FatalError{errorf("%v", v)} }
 // Like Fatal, but uses a formatted error message.
 func Fatalf(format string, v ...interface{}) FatalError { return FatalError{errorf(format, v...)} }
 
