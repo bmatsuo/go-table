@@ -11,7 +11,6 @@ package table
  */
 
 import (
-	"testing"
 	"reflect"
 	"strings"
 	"regexp"
@@ -121,16 +120,15 @@ type TBeforeAfter interface {
 }
 
 // Cast an element as a T, or create an os.Error describing the failure.
-func mustT(t *testing.T, name string, elem interface{}) (T, os.Error) {
+func mustT(t Testing, elem interface{}) T {
 	switch elem.(type) {
 	case nil:
-		return nil, os.NewError(fatalstrf(name, "nil slice element"))
+		t.Fatal("nil slice element")
 	case T:
 	default:
-		errf := "element does not implement table.T %v"
-		return nil, os.NewError(fatalstrf(name, errf, reflect.TypeOf(elem)))
+		t.Fatalf("element does not implement table.T %v", reflect.TypeOf(elem))
 	}
-	return elem.(T), nil
+	return elem.(T)
 }
 
 // Execute t's Test method. If t is a TBefore type execute t.Before() prior to

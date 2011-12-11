@@ -11,7 +11,6 @@ package table
  */
 
 import (
-	"testing"
 	"fmt"
 	"os"
 )
@@ -58,7 +57,12 @@ func Fatalf(format string, v ...interface{}) FatalError { return FatalError{erro
 /*********************************************/
 
 // Create a named messages with name format MsgFmt.
-func msg(name string, v interface{}) string { return sprintf(MsgFmt, name, sprint(v)) }
+func msg(name string, v interface{}) string {
+	if name != "" {
+		return sprintf(MsgFmt, name, sprint(v))
+	}
+	return sprint(v)
+}
 func msgf(name, format string, v ...interface{}) string {
 	return sprintf(MsgFmt, name, sprintf(format, v...))
 }
@@ -96,7 +100,7 @@ func fatalstrf(name, format string, v ...interface{}) string {
 }
 
 // Functions to log errors when they occur.
-func error(t *testing.T, name string, err os.Error) bool {
+func error(t Testing, name string, err os.Error) bool {
 	return onerror(err, func(err os.Error) {
 		if err == ErrSkip {
 			if Verbose {
@@ -111,6 +115,6 @@ func error(t *testing.T, name string, err os.Error) bool {
 		t.Error(errorstr(name, err))
 	})
 }
-func fatal(t *testing.T, name string, err os.Error) bool {
+func fatal(t Testing, name string, err os.Error) bool {
 	return onerror(err, func(err os.Error) { t.Error(fatalstr(name, err)) })
 }

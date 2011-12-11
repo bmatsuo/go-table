@@ -28,12 +28,12 @@ import (
 	"os"
 )
 
-func validValue(src string, index, v reflect.Value, zero reflect.Value) reflect.Value {
+func validValue(t *testingT, v reflect.Value, zero reflect.Value) reflect.Value {
 	switch {
 	case v.Interface() == nil:
 		return zero
 	case !v.IsValid():
-		panic(errorf("invalid value in %s index %v", src, index.Interface()))
+		t.Error("invalid value")
 	}
 	return v
 }
@@ -41,14 +41,14 @@ func validValue(src string, index, v reflect.Value, zero reflect.Value) reflect.
 // Iterate over a range of values, issuing a callback for each one. The callback
 // fn is expected to take two arguments (index/key, value pair) and return an
 // os.Error.
-func doRange(v reflect.Value, fn interface{}) os.Error {
+func doRange(t *testingT, v reflect.Value, fn interface{}) {
+	t = t.sub("internal doRange")
 	fnval := reflect.ValueOf(fn)
 	fntyp := fnval.Type()
 	if numin := fntyp.NumIn(); numin != 2 {
-		panic(errorf("doRange function of %d arguments %v", numin, fn))
-	}
-	if numout := fntyp.NumOut(); numout != 1 {
-		panic(errorf("doRange function of %d return values %v", numout, fn))
+		t.Fatalf("function of %d arguments %v", numin, fn)
+	} else if numout := fntyp.NumOut(); numout != 1 {
+		t.Fatalf("function of %d return values %v", numout, fn)
 	}
 	zero := reflect.Zero(fnval.Type().In(1))
 	var out reflect.Value
@@ -56,20 +56,28 @@ func doRange(v reflect.Value, fn interface{}) os.Error {
 	case reflect.Slice:
 		for i, n := 0, v.Len(); i < n; i++ {
 			ival, vval := reflect.ValueOf(i), v.Index(i)
-			arg := validValue("slice", ival, vval, zero)
+			arg := validValue(t.sub(sprintf("index %d", i)), vval, zero)
+			if !arg.IsValid() {
+				continue
+			}
 			out = fnval.Call([]reflect.Value{ival, arg})[0]
 			if !out.IsNil() {
-				return out.Interface().(os.Error)
+				t.Error(out.Interface())
+				break
 			}
 
 		}
 	case reflect.Map:
 		for _, kval := range v.MapKeys() {
 			vval := v.MapIndex(kval)
-			arg := validValue("map", kval, vval, zero)
+			arg := validValue(t.sub(sprintf("index %v", kval.Interface())), vval, zero)
+			if !arg.IsValid() {
+				continue
+			}
 			out = fnval.Call([]reflect.Value{kval, arg})[0]
 			if !out.IsNil() {
-				return out.Interface().(os.Error)
+				t.Error(out.Interface())
+				break
 			}
 		}
 	case reflect.Chan:
@@ -80,72 +88,86 @@ func doRange(v reflect.Value, fn interface{}) os.Error {
 			if vval, ok = v.Recv(); !ok {
 				break
 			}
-			arg := validValue("chan", ival, vval, zero)
+			arg := validValue(t.sub(sprintf("received value %d", i)), vval, zero)
+			if !arg.IsValid() {
+				continue
+			}
 			out = fnval.Call([]reflect.Value{ival, arg})[0]
 			if !out.IsNil() {
-				return out.Interface().(os.Error)
+				t.Error(out.Interface())
+				break
 			}
 		}
 	default:
-		panic(errorf("unacceptable type for range %v", v.Type()))
+		t.Fatalf("unacceptable type for range %v", v.Type())
 	}
-	return nil
+}
+
+func testMap(t *testingT, v reflect.Value) {
+	doRange(t.sub("map"), v, func(k, v interface{}) (err os.Error) {
+		sub := t.sub(sprint(k))
+		tTest(sub, mustT(sub, v))
+		return
+	})
 }
 
 type stringer interface {
 	String() string
 }
 
-func testCastT(t *testing.T, prefix string, v interface{}) (test T, err os.Error) {
-	if test, err = mustT(t, prefix, v); err != nil {
-		if err == ErrSkip {
-			if Verbose {
-				t.Logf("%s skipped", prefix)
-			}
-			err = nil
-		} else {
-			t.Fatal(err)
-		}
-		return
+func stringifyIndex(i int, v interface{}) string {
+	switch v.(type) {
+	case string:
+		return v.(string)
+	case stringer:
+		return sprintf("%v %d", v, i)
+	default:
 	}
-	return
-}
-
-func testExecute(t *testing.T, prefix string, test T) { tTest(newTestingT(prefix, t), test) }
-
-func testMap(t *testing.T, v reflect.Value) os.Error {
-	i := new(int)
-	return doRange(v, func(k, v interface{}) (err os.Error) {
-		var prefix string
-		switch k.(type) {
-		case string:
-			prefix = k.(string)
-		case stringer:
-			prefix = k.(stringer).String()
-		default:
-			prefix = sprintf("%v %d", reflect.TypeOf(k).String(), *i)
-		}
-		var test T
-		test, err = testCastT(t, prefix, v)
-		testExecute(t, prefix, test)
-		(*i)++
-		return
-	})
+	return sprintf("%v %d", reflect.TypeOf(v), i)
 }
 
 // Test each value in a slice table.
-func testSlice(t *testing.T, v reflect.Value) os.Error {
-	return doRange(v, func(i int, elem interface{}) (err os.Error) {
-		prefix := sprintf("%v %d", reflect.TypeOf(elem), i)
-		var test T
-		test, err = testCastT(t, prefix, elem)
-		testExecute(t, prefix, test)
+func testSlice(t *testingT, v reflect.Value) {
+	doRange(t.sub("slice"), v, func(i int, elem interface{}) (err os.Error) {
+		sub := t.sub(stringifyIndex(i, elem))
+		tTest(sub, mustT(sub, elem))
 		return
 	})
 }
 
 // Detect a value's reflect.Kind. Return the reflect.Value as well for good measure.
 func kind(x interface{}) (reflect.Value, reflect.Kind) { v := reflect.ValueOf(x); return v, v.Kind() }
+
+func validateTable(t *testingT, table interface{}) (tab reflect.Value, k reflect.Kind) {
+	tab, k = kind(table)
+	switch k {
+	case reflect.Invalid:
+		t.Fatal("table is invalid")
+	case reflect.Slice, reflect.Map: // Allow chan?
+		break
+	default:
+		t.Fatalf("table %v is not a slice", tab.Type())
+	}
+
+	// A table can't be empty.
+	if tab.Len() == 0 && k != reflect.Chan {
+		t.Fatal("empty table")
+	}
+	return
+}
+
+func testHelper(t *testingT, table interface{}) {
+	tinternal := newTestingT("internal table.Test", t)
+	val, k := validateTable(tinternal.sub("table validation"), table)
+	switch k {
+	case reflect.Slice:
+		testSlice(t, val)
+	case reflect.Map:
+		testMap(t, val)
+	default:
+		tinternal.Fatalf("unexpected table kind %v", k)
+	}
+}
 
 // A table driven test. The table must be a slice of values all implementing T.
 // But, not all elements need be of the same type. And furthermore, the slice's
@@ -154,36 +176,4 @@ func kind(x interface{}) (reflect.Value, reflect.Kind) { v := reflect.ValueOf(x)
 //
 // A feasible future enhancement would be to allow map tables. Possibly chan
 // tables.
-func Test(t *testing.T, table interface{}) {
-	prefix := "table.Test" // name for internal errors.
-
-	// A table must be a slice type.
-	val, k := kind(table)
-	switch k {
-	case reflect.Invalid:
-		fatal(t, prefix, errorf("table is invalid"))
-	case reflect.Slice, reflect.Map: // Allow chan?
-		break
-	default:
-		fatal(t, prefix, errorf("table %s is not a slice", val.Type().String()))
-	}
-
-	// A table can't be empty.
-	if val.Len() == 0 && k != reflect.Chan {
-		fatal(t, prefix, errorf("empty table"))
-	}
-
-	// Execute table tests.
-	switch k {
-	case reflect.Slice:
-		if testSlice(t, val) != nil {
-			return
-		}
-	case reflect.Map:
-		if testMap(t, val) != nil {
-			return
-		}
-	default:
-		fatal(t, prefix, errorf("unexpected error"))
-	}
-}
+func Test(t *testing.T, table interface{}) { testHelper(newTestingT("", t), table) }

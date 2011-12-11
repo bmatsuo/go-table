@@ -31,7 +31,7 @@ var testint1 = new(int)
 var testint2 = new(int)
 
 func cleartestint() { *testint1, *testint2 = 0, 0 }
-func onetestint() { *testint1, *testint2 = 1, 1 }
+func onetestint()   { *testint1, *testint2 = 1, 1 }
 
 var doRangeTests = []doRangeTest{
 	// Make sure range callbacks are being called correctly.
@@ -56,7 +56,7 @@ var doRangeTests = []doRangeTest{
 		}},
 	// Ensure that errors from the range callback stop the iteration.
 	{onetestint, cleartestint,
-		[]int{1, 2, 3}, func(i, x int) os.Error{ *testint1 += i; *testint2 += x; return os.NewError("fail") }, true,
+		[]int{1, 2, 3}, func(i, x int) os.Error { *testint1 += i; *testint2 += x; return os.NewError("fail") }, true,
 		func() (err os.Error) {
 			if !(*testint1 == 1 && *testint2 == 2) {
 				err = errorf("testint1: %d, testint2: %d", *testint1, *testint2)
@@ -71,9 +71,12 @@ func TestDoRange(t *testing.T) {
 		if test.before != nil {
 			test.before()
 		}
-		if err := doRange(reflect.ValueOf(test.x), test.fn); (err != nil) != test.isError {
+		ft := fauxTest("doRange test", func(t Testing) {
+			doRange(newTestingT("doRange slice", t), reflect.ValueOf(test.x), test.fn)
+		})
+		if ft.failed != test.isError {
 			explain, qualify := "test is %san error", "not "
-			if err != nil {
+			if ft.failed {
 				qualify = ""
 			}
 			t.Error(errorstrf(name, explain, qualify))
