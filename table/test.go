@@ -144,17 +144,17 @@ func elementTest(t T, test Element) {
 	place := "before"
 	defer func() {
 		if e := recover(); e != nil {
-			t.Errorf("panic %s test; %v", place, e)
+			t.Errorf("panic %s Test method; %v", place, e)
 		}
 	}()
 	switch test.(type) {
 	case ElementBeforeAfter:
-		test.(ElementBefore).Before(subT("before test", t))
-		defer test.(ElementAfter).After(subT("after test", t))
+		test.(ElementBefore).Before(subT("before Test method", t))
+		defer test.(ElementAfter).After(subT("after Test method", t))
 	case ElementBefore:
-		test.(ElementBefore).Before(subT("before test", t))
+		test.(ElementBefore).Before(subT("before Test method", t))
 	case ElementAfter:
-		defer test.(ElementAfter).After(subT("after test", t))
+		defer test.(ElementAfter).After(subT("after Test method", t))
 	}
 	place = "during"
 	defer func() { place = "after" }()
