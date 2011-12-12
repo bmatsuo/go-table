@@ -11,7 +11,6 @@ package table
  */
 
 import (
-	"errors"
 	"reflect"
 	"testing"
 )
@@ -56,7 +55,7 @@ var doRangeTests = []doRangeTest{
 		}},
 	// Ensure that errors from the range callback stop the iteration.
 	{onetestint, cleartestint,
-		[]int{1, 2, 3}, func(i, x int) error { *testint1 += i; *testint2 += x; return errors.New("fail") }, true,
+		[]int{1, 2, 3}, func(i, x int) error { *testint1 += i; *testint2 += x; return error_("fail") }, true,
 		func() (err error) {
 			if !(*testint1 == 1 && *testint2 == 2) {
 				err = errorf("testint1: %d, testint2: %d", *testint1, *testint2)
