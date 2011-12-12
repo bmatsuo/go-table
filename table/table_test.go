@@ -89,3 +89,60 @@ func TestDoRange(t *testing.T) {
 		}
 	}
 }
+
+type stringifyTest struct {
+	i   int
+	v   interface{}
+	out string
+}
+
+func (test stringifyTest) Test(t Testing) {
+	if str := stringifyIndex(test.i, test.v); str != test.out {
+		t.Errorf("stringifyIndex(%d, %#v) => %#v != %#v", test.i, test.v, str, test.out)
+	}
+}
+
+type testStringerTest struct{ in, out string }
+
+func (s testStringerTest) String() string { return "simple string test" }
+func (s testStringerTest) Test(t Testing) {}
+
+var stringifyTests = []stringifyTest{
+	{1, "abc", "abc"},
+	{1, struct{ a, b int }{1, 2}, "struct { a int; b int } 1"},
+	{0, stringifyTest{1, 1, "int 1"}, "table.stringifyTest 0"},
+	{2, testStringerTest{"abc", "def"}, "simple string test 2"},
+}
+
+func TestStringify(t *testing.T) {
+	for i, test := range stringifyTests {
+		tTest(newTestingT(sprintf("stringify %d", i), t), test)
+	}
+}
+
+type validateTableTest struct {
+	table interface{}
+	errs  []string
+}
+
+func (test validateTableTest) Test(t Testing) {
+	meta := metaTestSimple{
+		sprintf("validateTable(t, %#v)", test.table),
+		func(t Testing) { validateTable(newTestingT("", t), test.table) },
+		test.errs}
+	meta.Test(t)
+}
+
+var validateTableTests = []validateTableTest{
+	{[]int{1, 2, 3}, []string{}},
+	{[]interface{}{1, "abc", 3 + 3i}, []string{}},
+	{34, []string{"not a", "slice"}},
+	{nil, []string{"invalid"}},
+	{make([]int, 0), []string{"empty"}},
+}
+
+func TestValidateTable(t *testing.T) {
+	for i, test := range validateTableTests {
+		tTest(newTestingT(sprintf("vaidateTable %d", i), t), test)
+	}
+}

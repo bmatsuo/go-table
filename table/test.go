@@ -120,15 +120,19 @@ type TBeforeAfter interface {
 }
 
 // Cast an element as a T, or create an os.Error describing the failure.
-func mustT(t Testing, elem interface{}) T {
+func mustT(t Testing, elem interface{}) (test T, err os.Error) {
 	switch elem.(type) {
 	case nil:
-		t.Fatal("nil slice element")
+		err = Error("nil slice element")
+		t.Error(err)
+		return
 	case T:
 	default:
-		t.Fatalf("element does not implement table.T %v", reflect.TypeOf(elem))
+		err = Errorf("element does not implement table.T %v", reflect.TypeOf(elem))
+		t.Error(err)
+		return
 	}
-	return elem.(T)
+	return elem.(T), nil
 }
 
 // Execute t's Test method. If t is a TBefore type execute t.Before() prior to
