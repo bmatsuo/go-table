@@ -73,7 +73,7 @@ func catchfailed(e interface{}) {
 	}
 	panic(e)
 }
-func fauxTest(name string, test func(Testing)) (t *fauxT) {
+func fauxTest(name string, test func(T)) (t *fauxT) {
 	t = new(fauxT)
 	defer func() { catchfailed(recover()) }()
 	test(subT(name, t))
@@ -83,12 +83,12 @@ func fauxTest(name string, test func(Testing)) (t *fauxT) {
 // utility type for testing.
 type metaTest struct {
 	name     string
-	test     func(Testing)
+	test     func(T)
 	failed   bool
-	validate func(Testing, *fauxT)
+	validate func(T, *fauxT)
 }
 
-func (test metaTest) Test(t Testing) {
+func (test metaTest) Test(t T) {
 	ft := fauxTest(test.name, test.test)
 	if test.failed != ft.Failed() {
 		success := "success"
@@ -105,12 +105,12 @@ func (test metaTest) Test(t Testing) {
 // do no logging.
 type metaTestSimple struct {
 	name string
-	test func(Testing)
+	test func(T)
 	errs []string
 }
 
-func (test metaTestSimple) Test(t Testing) {
-	metaTest{"simple meta-test", test.test, len(test.errs) > 0, func(t Testing, ft *fauxT) {
+func (test metaTestSimple) Test(t T) {
+	metaTest{"simple meta-test", test.test, len(test.errs) > 0, func(t T, ft *fauxT) {
 		if len(test.errs) == 0 {
 			return
 		}
@@ -124,27 +124,27 @@ func (test metaTestSimple) Test(t Testing) {
 
 type testingTTest metaTest
 
-func (test testingTTest) Test(t Testing) { metaTest(test).Test(t) }
+func (test testingTTest) Test(t T) { metaTest(test).Test(t) }
 
-func stringContains(t Testing, name, text, sub string) {
+func stringContains(t T, name, text, sub string) {
 	if strings.Index(text, sub) < 0 {
 		t.Errorf("%s missing %#v: %#v", name, sub, text)
 	}
 }
 
-func stringMissing(t Testing, name, text, sub string) {
+func stringMissing(t T, name, text, sub string) {
 	if strings.Index(text, sub) >= 0 {
 		t.Errorf("%s unexpected %#v: %#v", name, sub, text)
 	}
 }
 
-func emptyLog(t Testing, log []logItem) {
+func emptyLog(t T, log []logItem) {
 	if len(log) > 0 {
 		t.Error("non-empty log")
 	}
 }
 
-func sizeLog(t Testing, log []logItem, size int) {
+func sizeLog(t T, log []logItem, size int) {
 	if size == 0 {
 		emptyLog(t, log)
 	} else if len(log) != size {
@@ -153,31 +153,31 @@ func sizeLog(t Testing, log []logItem, size int) {
 }
 
 var testingTTests = []testingTTest{
-	{"testname", func(t Testing) {}, false, func(t Testing, ft *fauxT) { emptyLog(t, ft.log) }},
-	{"testname", func(t Testing) { t.Fail() }, true, func(t Testing, ft *fauxT) { emptyLog(t, ft.log) }},
-	{"testname", func(t Testing) { t.FailNow() }, true, func(t Testing, ft *fauxT) { emptyLog(t, ft.log) }},
-	{"testname", func(t Testing) { t.Log("logmsg") }, false, func(t Testing, ft *fauxT) {
+	{"testname", func(t T) {}, false, func(t T, ft *fauxT) { emptyLog(t, ft.log) }},
+	{"testname", func(t T) { t.Fail() }, true, func(t T, ft *fauxT) { emptyLog(t, ft.log) }},
+	{"testname", func(t T) { t.FailNow() }, true, func(t T, ft *fauxT) { emptyLog(t, ft.log) }},
+	{"testname", func(t T) { t.Log("logmsg") }, false, func(t T, ft *fauxT) {
 		sizeLog(t, ft.log, 1)
 		stringContains(t, "log", sprint(ft.log[0].v), "testname")
 		stringContains(t, "log", sprint(ft.log[0].v), "logmsg")
 	}},
-	{"testname", func(t Testing) { t.Error("errmsg") }, true, func(t Testing, ft *fauxT) {
+	{"testname", func(t T) { t.Error("errmsg") }, true, func(t T, ft *fauxT) {
 		sizeLog(t, ft.log, 1)
 		stringContains(t, "log", sprint(ft.log[0].v), "testname")
 		stringContains(t, "log", sprint(ft.log[0].v), "errmsg")
 	}},
-	{"testname", func(t Testing) { t.Fatal("fatmsg") }, true, func(t Testing, ft *fauxT) {
+	{"testname", func(t T) { t.Fatal("fatmsg") }, true, func(t T, ft *fauxT) {
 		sizeLog(t, ft.log, 1)
 		stringContains(t, "log", sprint(ft.log[0].v), "testname")
 		stringContains(t, "log", sprint(ft.log[0].v), "fatmsg")
 	}},
-	{"testname", func(t Testing) { t.Fatal("fatmsg"); t.Error("errmsg") }, true, func(t Testing, ft *fauxT) {
+	{"testname", func(t T) { t.Fatal("fatmsg"); t.Error("errmsg") }, true, func(t T, ft *fauxT) {
 		sizeLog(t, ft.log, 1)
 		stringContains(t, "log", sprint(ft.log[0].v), "testname")
 		stringContains(t, "log", sprint(ft.log[0].v), "fatmsg")
 		stringMissing(t, "log", sprint(ft.log[0].v), "errmsg")
 	}},
-	{"testname", func(t Testing) { t.Error("errmsg"); t.Log("logmsg") }, true, func(t Testing, ft *fauxT) {
+	{"testname", func(t T) { t.Error("errmsg"); t.Log("logmsg") }, true, func(t T, ft *fauxT) {
 		sizeLog(t, ft.log, 2)
 		stringContains(t, "log", sprint(ft.log[0].v), "testname")
 		stringContains(t, "log", sprint(ft.log[0].v), "testname")
@@ -189,7 +189,7 @@ var testingTTests = []testingTTest{
 	}},
 }
 
-func TestTestingT(t *testing.T) {
+func TestT(t *testing.T) {
 	for i, test := range testingTTests {
 		t.Log("test ", i)
 		test.Test(t)

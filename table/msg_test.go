@@ -39,7 +39,7 @@ type errorStringTest struct {
 	matches []string
 }
 
-func (test errorStringTest) Test(t Testing) {
+func (test errorStringTest) Test(t T) {
 	for i, r := range test.matches {
 		if !regexp.MustCompile(r).MatchString(test.err.Error()) {
 			t.Errorf("pattern %d (%s) doesn't match error string: %v", i, r, test.err)

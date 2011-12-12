@@ -19,27 +19,27 @@ import (
 // Non-nil values returned by the Test method will cause the table test that
 // called Test to fail. A FatalError retured by Test stops the table test.
 type Element interface {
-	Test(Testing) // Execute the test described by the object.
+	Test(T) // Execute the test described by the object.
 }
 
 // These types act on strings values of uncaught panics inside Test() the
 // type's test method.  Acceptable value types are substrings,
-// *regexp.Regexp, or func(Testing, interface{}) objects.
+// *regexp.Regexp, or func(T, interface{}) objects.
 type PanicExpectation interface{}
 
-func acceptablePanicExpectation(t Testing, exp PanicExpectation) (ok bool) {
+func acceptablePanicExpectation(t T, exp PanicExpectation) (ok bool) {
 	switch exp.(type) {
 	case nil:
 		t.Error("nil PanicExpectation")
 		return
-	case string, *regexp.Regexp, func(Testing, string):
+	case string, *regexp.Regexp, func(T, string):
 		return true
 	}
 	t.Errorf("unacceptable PanicExpectation type %s", reflect.TypeOf(exp))
 	return
 }
 
-func applyPanicExpectation(t Testing, exp PanicExpectation, panicv interface{}) {
+func applyPanicExpectation(t T, exp PanicExpectation, panicv interface{}) {
 	switch exp.(type) {
 	case *regexp.Regexp:
 		r := exp.(*regexp.Regexp)
@@ -50,8 +50,8 @@ func applyPanicExpectation(t Testing, exp PanicExpectation, panicv interface{}) 
 		if p := sprint(panicv); strings.Index(p, exp.(string)) < 0 {
 			t.Errorf("unexpected panic (doesn't contain %#v): %s", exp, p)
 		}
-	case func(Testing, interface{}):
-		exp.(func(Testing, interface{}))(subT("callback function", t), panicv)
+	case func(T, interface{}):
+		exp.(func(T, interface{}))(subT("callback function", t), panicv)
 	}
 }
 
@@ -62,7 +62,7 @@ type indexedError struct {
 
 func (err indexedError) Error() string { return err.Err.Error() }
 
-func applyPanicExpectations(t Testing, exps []PanicExpectation, panicv interface{}) {
+func applyPanicExpectations(t T, exps []PanicExpectation, panicv interface{}) {
 	for i, exp := range exps {
 		applyPanicExpectation(subT(sprintf("panic expectation %d", i), t), exp, panicv)
 	}
@@ -73,7 +73,7 @@ type ElementPanics interface {
 	Panics() []PanicExpectation // ElementPanics when non-nil, certain panics expected.
 }
 
-func getElementPanicsExpectations(t Testing, test ElementPanics) (exps []PanicExpectation, ok bool) {
+func getElementPanicsExpectations(t T, test ElementPanics) (exps []PanicExpectation, ok bool) {
 	if test == nil {
 		t.Error("nil test")
 		return
@@ -87,22 +87,22 @@ func getElementPanicsExpectations(t Testing, test ElementPanics) (exps []PanicEx
 
 type ElementBefore interface {
 	Element         // ElementBefore is an Element.
-	Before(Testing) // Callback executed before the Test method.
+	Before(T) // Callback executed before the Test method.
 }
 
 type ElementAfter interface {
 	Element        // ElementAfter is an Element.
-	After(Testing) // Callback executed after the Test method.
+	After(T) // Callback executed after the Test method.
 }
 
 type ElementBeforeAfter interface {
 	Element         // ElementBeforeAfter is an Element.
-	Before(Testing) // ElementBeforeAfter is an ElementBefore.
-	After(Testing)  // ElementBeforeAfter is an ElementAfter.
+	Before(T) // ElementBeforeAfter is an ElementBefore.
+	After(T)  // ElementBeforeAfter is an ElementAfter.
 }
 
 // Cast an value as an Element, or create an error describing the failure.
-func mustElement(t Testing, elem interface{}) (test Element, err error) {
+func mustElement(t T, elem interface{}) (test Element, err error) {
 	switch elem.(type) {
 	case nil:
 		err = error_("nil slice element")
@@ -120,7 +120,7 @@ func mustElement(t Testing, elem interface{}) (test Element, err error) {
 // Execute t's Test method. If t is a TBefore type execute t.Before() prior to
 // t.Test(). If t is a TAfter type, execute t.After() after t.Test() returns.
 // Handles runtimes panics resulting from any of these callback.
-func elementTest(t Testing, test Element) {
+func elementTest(t T, test Element) {
 	place := "before"
 	defer func() {
 		if e := recover(); e != nil {
