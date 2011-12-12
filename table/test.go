@@ -113,7 +113,7 @@ func mustElement(t T, elem interface{}) (tests []Element, err error) {
 		t.Error(err)
 		return
 	case ElementGenerator:
-		tests = elem.(ElementGenerator).Generate(t)
+		tests = elem.(ElementGenerator).Generate(subT("table.Element generation", t))
 		nils := make([]int, 0, len(tests)+1)
 		for i := range tests {
 			if tests[i] == nil {
