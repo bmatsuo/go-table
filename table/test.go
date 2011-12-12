@@ -114,6 +114,23 @@ func mustElement(t T, elem interface{}) (tests []Element, err error) {
 		return
 	case ElementGenerator:
 		tests = elem.(ElementGenerator).Generate(t)
+		nils := make([]int, 0, len(tests)+1)
+		for i := range tests {
+			if tests[i] == nil {
+				nils = append(nils, i)
+			}
+		}
+		if len(nils) > 0 {
+			t.Errorf("nil generated Elements %v", nils)
+			goodtests := make([]Element, 0, len(tests)-len(nils))
+			nils = append(nils, len(tests))
+			for k, i := range nils {
+				if len(goodtests)+k != i {
+					goodtests = append(goodtests, tests[len(goodtests)+k:i]...)
+				}
+			}
+			tests = goodtests
+		}
 	case Element:
 		tests = []Element{elem.(Element)}
 	default:
