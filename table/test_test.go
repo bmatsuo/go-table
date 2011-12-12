@@ -7,9 +7,9 @@ package table
  */
 
 import (
-	"testing"
+	"errors"
 	"regexp"
-	"os"
+	"testing"
 )
 
 // Test the internal tTest function.
@@ -22,7 +22,7 @@ func (test tTestTest) Test(t Testing) { test.fn(t) }
 
 var tTestTests = []tTestTest{
 	{func(t Testing) {}, nil},
-	{func(t Testing) { t.Error(os.NewError("emsg")) }, []string{"emsg"}},
+	{func(t Testing) { t.Error(errors.New("emsg")) }, []string{"emsg"}},
 	{func(t Testing) { t.Fatal("fmsg") }, []string{"fmsg"}},
 	{func(t Testing) { panic("pmsg") }, []string{"pmsg"}},
 }

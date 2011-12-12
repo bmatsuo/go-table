@@ -7,18 +7,17 @@ package table
  */
 
 import (
-	"testing"
-	"strings"
 	"regexp"
-	"os"
+	"strings"
+	"testing"
 )
 
 type logItem struct{ v interface{} }
 
-func (item logItem) AsError() os.Error {
+func (item logItem) AsError() error {
 	switch item.v.(type) {
-	case os.Error:
-		return item.v.(os.Error)
+	case error:
+		return item.v.(error)
 	}
 	return nil
 }
@@ -67,8 +66,8 @@ func catchfailed(e interface{}) {
 	switch e.(type) {
 	case nil:
 		return
-	case os.Error:
-		if e.(os.Error) == errFailed {
+	case error:
+		if e.(error) == errFailed {
 			return
 		}
 	}

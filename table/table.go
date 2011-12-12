@@ -23,9 +23,8 @@ For general information about table driven testing in Go, see
 package table
 
 import (
-	"testing"
 	"reflect"
-	"os"
+	"testing"
 )
 
 func validValue(t *testingT, v reflect.Value, zero reflect.Value) reflect.Value {
@@ -104,7 +103,7 @@ func doRange(t *testingT, v reflect.Value, fn interface{}) {
 }
 
 func testMap(t *testingT, v reflect.Value) {
-	doRange(t.sub("map"), v, func(k, v interface{}) os.Error {
+	doRange(t.sub("map"), v, func(k, v interface{}) error {
 		sub := t.sub(sprint(k))
 		if test, err := mustT(sub, v); err == nil {
 			tTest(sub, test)
@@ -130,7 +129,7 @@ func stringifyIndex(i int, v interface{}) string {
 
 // Test each value in a slice table.
 func testSlice(t *testingT, v reflect.Value) {
-	doRange(t.sub("slice"), v, func(i int, elem interface{}) os.Error {
+	doRange(t.sub("slice"), v, func(i int, elem interface{}) error {
 		sub := t.sub(stringifyIndex(i, elem))
 		if test, err := mustT(sub, elem); err == nil {
 			tTest(sub, test)

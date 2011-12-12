@@ -12,9 +12,8 @@ package table
 
 import (
 	"reflect"
-	"strings"
 	"regexp"
-	"os"
+	"strings"
 )
 
 // Non-nil values returned by the Test method will cause the table test that
@@ -58,10 +57,10 @@ func applyPanicExpectation(t Testing, exp PanicExpectation, panicv interface{}) 
 
 type indexedError struct {
 	index int
-	Err   os.Error
+	Err   error
 }
 
-func (err indexedError) String() string { return err.Err.String() }
+func (err indexedError) Error() string { return err.Err.Error() }
 
 func applyPanicExpectations(t Testing, exps []PanicExpectation, panicv interface{}) {
 	for i, exp := range exps {
@@ -103,7 +102,7 @@ type TBeforeAfter interface {
 }
 
 // Cast an element as a T, or create an os.Error describing the failure.
-func mustT(t Testing, elem interface{}) (test T, err os.Error) {
+func mustT(t Testing, elem interface{}) (test T, err error) {
 	switch elem.(type) {
 	case nil:
 		err = error_("nil slice element")

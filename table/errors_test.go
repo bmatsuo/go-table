@@ -7,20 +7,19 @@ package table
  */
 
 import (
-	"testing"
 	"reflect"
 	"regexp"
-	"os"
+	"testing"
 )
 
 type errorStringTest struct {
-	err     os.Error
+	err     error
 	matches []string
 }
 
 func (test errorStringTest) Test(t Testing) {
 	for i, r := range test.matches {
-		if !regexp.MustCompile(r).MatchString(test.err.String()) {
+		if !regexp.MustCompile(r).MatchString(test.err.Error()) {
 			t.Errorf("pattern %d (%s) doesn't match error string: %v", i, r, test.err)
 		}
 	}
