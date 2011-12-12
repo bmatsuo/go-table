@@ -10,11 +10,9 @@
 
 /*
 Package table provides a simple framework for executing table driven tests.
-A table is a set (usually a slice) of tests. A table test element is usually a
+A table is a set (usually a slice) of tests. A table test Element is usually a
 simple struct that describes a singular test. In the table package, table test
-elements implement their own test(s) as a method Test which returns an os.Error.
-Non-nil errors returned by a table test's Test method cause errors to be logged
-with the "testing" package.
+Elements implement their own test(s) as a method Test.
 
 For general information about table driven testing in Go, see
 
@@ -39,7 +37,7 @@ func validValue(t *testingT, v reflect.Value, zero reflect.Value) reflect.Value 
 
 // Iterate over a range of values, issuing a callback for each one. The callback
 // fn is expected to take two arguments (index/key, value pair) and return an
-// os.Error.
+// error.
 func doRange(t *testingT, v reflect.Value, fn interface{}) {
 	t = t.sub("internal doRange")
 	fnval := reflect.ValueOf(fn)
@@ -172,10 +170,11 @@ func testHelper(t *testingT, table interface{}) {
 	}
 }
 
-// A table driven test. The table must be a slice of values all implementing T.
-// But, not all elements need be of the same type. And furthermore, the slice's
-// element type does not need to satisfy T. For example, a slice v of type
-// []interface{} can be a valid table if all its elements satisfy T.
+// A table driven test. The table must be a slice of values all implementing
+// Element. But, not all elements need be of the same type. And furthermore,
+// the slice's element type does not need to satisfy Element. For example, a
+// slice v of type []interface{} can be a valid table if all its elements
+// satisfy Element.
 //
 // A feasible future enhancement would be to allow map tables. Possibly chan
 // tables.
