@@ -17,15 +17,14 @@ import (
 	"os"
 )
 
-// Non-nil values returned by the Test method will cause the table test that
-// called Test to fail. A FatalError retured by Test stops the table test.
+// The interface table elements must satisfy.
 type Element interface {
 	Test(T) // Execute the test described by the object.
 }
 
-// These types act on strings values of uncaught panics inside Test() the
-// type's test method.  Acceptable value types are substrings,
-// *regexp.Regexp, or func(T, interface{}) objects.
+// Act on uncaught panics from the type's Test method. Underlying type must be
+// string, *regexp.Regexp, or func(T, interface{}). String and regexp values
+// test against the panic's string value. String values search for a substring.
 type PanicExpectation interface{}
 
 func acceptablePanicExpectation(t T, exp PanicExpectation) (ok bool) {
