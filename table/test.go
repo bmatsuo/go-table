@@ -100,7 +100,7 @@ type ElementBeforeAfter interface {
 	After(T)  // Is an ElementAfter.
 }
 
-// Not an Element.
+// Can't be an Element. Any Test method is ignored.
 type ElementGenerator interface {
 	Generate(T) []Element // A (possibly empty) slice of Elements.
 }
