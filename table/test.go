@@ -87,17 +87,17 @@ func getElementPanicsExpectations(t T, test ElementPanics) (exps []PanicExpectat
 }
 
 type ElementBefore interface {
-	Element         // ElementBefore is an Element.
+	Element   // ElementBefore is an Element.
 	Before(T) // Callback executed before the Test method.
 }
 
 type ElementAfter interface {
-	Element        // ElementAfter is an Element.
+	Element  // ElementAfter is an Element.
 	After(T) // Callback executed after the Test method.
 }
 
 type ElementBeforeAfter interface {
-	Element         // ElementBeforeAfter is an Element.
+	Element   // ElementBeforeAfter is an Element.
 	Before(T) // ElementBeforeAfter is an ElementBefore.
 	After(T)  // ElementBeforeAfter is an ElementAfter.
 }
@@ -118,9 +118,10 @@ func mustElement(t T, elem interface{}) (test Element, err os.Error) {
 	return elem.(Element), nil
 }
 
-// Execute t's Test method. If t is a TBefore type execute t.Before() prior to
-// t.Test(). If t is a TAfter type, execute t.After() after t.Test() returns.
-// Handles runtimes panics resulting from any of these callback.
+// Execute test's Test method. If test is an ElementBefore type execute
+// test.Before() prior to test.Test(). If test is a ElementAfter type, execute
+// test.After() after test.Test() returns. Handles runtimes panics resulting
+// from any of these callback.
 func elementTest(t T, test Element) {
 	place := "before"
 	defer func() {

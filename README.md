@@ -69,7 +69,7 @@ table package.
 ```go
 type flagtest struct { in, out string }
 
-func (test flagtest) Test(t table.Testing) {
+func (test flagtest) Test(t table.T) {
     var flagprinter flagPrinter
     s := Sprintf(tt.in, &flagprinter)
     if s != tt.out {
