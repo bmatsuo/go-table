@@ -18,8 +18,8 @@ Table driven tests are not difficult to write once you get the hang of it.
 Once that happens, they are a very effective tool for many unit-testing
 applications.
 
-Table tests in Go are awesome witout Go-table. Why use it?
-----------------------------------------------------------
+Table tests in Go are awesome without Go-table. Why use it?
+-----------------------------------------------------------
 
 Table driven testing, combined with Go's flexible anonomous type inference is
 already quite clean and conise even without Go-table. Go-table is merely trying
