@@ -9,7 +9,7 @@
  */
 
 /*
-Package table provides a simple framework for executing table driven tests.
+Package table provides a simple interface-based table driven testing framework.
 A table is a set (usually a slice) of tests. A table test Element is usually a
 simple struct that describes a singular test. In the table package, table test
 Elements implement their own test(s) as a method Test.
