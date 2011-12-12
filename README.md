@@ -127,6 +127,17 @@ More examples
 Some working examples of varying complexity can be found in
 [the examples directory][]
 
+To run the examples, after installing Go-table, execute
+
+    gomake test
+
+**Note:** you may have to change the "tables" import path depending on your
+installation.
+
+There are a couple of failing tests in each example to demonstrate the style of
+error messages used by Go-table.
+
+
 Installation
 ============
 
