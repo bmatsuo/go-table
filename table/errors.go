@@ -11,6 +11,7 @@ package table
  */
 
 import (
+	"strings"
 	"errors"
 	"fmt"
 )
@@ -52,39 +53,27 @@ func fatalf(format string, v ...interface{}) fatalError { return fatalError{erro
 /*********************************************/
 
 // Create a named messages with name format MsgFmt.
-func msg(name string, v interface{}) string {
+func msg(name string, v ...interface{}) string {
 	if name != "" {
-		return sprintf(MsgFmt, name, sprint(v))
+		return sprintf(MsgFmt, name, sprint(v...))
 	}
-	return sprint(v)
+	return sprint(v...)
 }
-func msgf(name, format string, v ...interface{}) string {
-	return sprintf(MsgFmt, name, sprintf(format, v...))
-}
-
-// Execute a callback if the given error is non-nil.
-func onerror(err error, fn func(error)) bool {
-	if err != nil {
-		fn(err)
-		return true
-	}
-	return false
-}
+func msgname(name, typ string) string { return strings.Join([]string{name, typ}, " ") }
 
 // Functions to generate error strings.
-func errorstr(name string, v interface{}) (err string) {
+func errorstr(name string, v ...interface{}) (err string) {
 	if Verbose {
-		err = msg(sprintf("%s error", name), v)
-	} else {
-		err = msg(name, v)
+		name = msgname(name, "error")
 	}
+	err = msg(name, v...)
 	return
 }
-func fatalstr(name string, v interface{}) string {
+func fatalstr(name string, v ...interface{}) string {
 	if Verbose {
-		name = sprintf("%s fatal", name)
+		name = msgname(name, "fatal")
 	}
-	return errorstr(name, v)
+	return errorstr(name, v...)
 }
 // Functions to generate error strings with formatted messages.
 func errorstrf(name, format string, v ...interface{}) string {

@@ -10,42 +10,38 @@ package table
  *  Description: 
  */
 
-import (
-//"testing"
-)
+import ()
 
 type testingT struct {
 	name string
 	t    Testing
 }
 
-func newTestingT(name string, t Testing) *testingT { return &testingT{name, t} }
-func (t *testingT) dup() (cp *testingT)            { cp = new(testingT); *cp = *t; return }
-func (t *testingT) sub(name string) (s *testingT)  { s = newTestingT(name, t); return }
+func subT(name string, t Testing) *testingT       { return &testingT{name, t} }
+func (t *testingT) dup() (cp *testingT)           { cp = new(testingT); *cp = *t; return }
+func (t *testingT) sub(name string) (s *testingT) { s = subT(name, t); return }
 
-func (t *testingT) msg(v ...interface{}) string            {
-	m := sprint(v...)
-	if t.name != "" {
+func (t *testingT) msg(v ...interface{}) (m string) {
+	if m = sprint(v...); t.name != "" {
 		m = msg(t.name, m)
 	}
-	return m
+	return
 }
 func (t *testingT) errmsg(typ string, v ...interface{}) string {
 	name, m := t.name, sprint(v...)
-	if Verbose {
-		prefix := typ
-		if name != "" {
-			prefix = sprintf("%s %s", t.name, typ)
-		}
-		name = msg(name, prefix)
-	}
-	if name != "" {
+	switch {
+	case Verbose && name != "":
+		typ = sprintf("%s %s", t.name, typ)
+		fallthrough
+	case Verbose:
+		name = msg(name, typ)
+		fallthrough
+	case name != "":
 		m = msg(name, m)
 	}
 	return m
 }
-func (t *testingT) msgf(f string, v ...interface{}) string { return msg(t.name, sprintf(f, v...)) }
-
+func (t *testingT) msgf(f string, v ...interface{}) string { return t.msg(sprintf(f, v...)) }
 
 func (t *testingT) Fail()                                     { t.t.Fail() }
 func (t *testingT) FailNow()                                  { t.t.FailNow() }
@@ -56,10 +52,11 @@ func (t *testingT) fatal(args ...interface{})                 { t.t.Fatal(sprint
 func (t *testingT) Log(args ...interface{})                   { t.log(t.msg(args...)) }
 func (t *testingT) Error(args ...interface{})                 { t.error(t.errmsg("error", args...)) }
 func (t *testingT) Fatal(args ...interface{})                 { t.fatal(t.errmsg("fatal", args...)) }
-func (t *testingT) Logf(format string, args ...interface{})   { t.Log(sprintf(format, args...)) }
-func (t *testingT) Errorf(format string, args ...interface{}) { t.Error(sprintf(format, args...)) }
-func (t *testingT) Fatalf(format string, args ...interface{}) { t.Fatal(sprintf(format, args...)) }
+func (t *testingT) Logf(format string, args ...interface{})   { t.log(t.msgf(format, args...)) }
+func (t *testingT) Errorf(format string, args ...interface{}) { t.error(t.msgf(format, args...)) }
+func (t *testingT) Fatalf(format string, args ...interface{}) { t.fatal(t.msgf(format, args...)) }
 
+// Think *testing.T
 type Testing interface {
 	Error(args ...interface{})
 	Errorf(format string, args ...interface{})

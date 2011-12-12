@@ -71,7 +71,7 @@ func TestDoRange(t *testing.T) {
 			test.before()
 		}
 		ft := fauxTest("doRange test", func(t Testing) {
-			doRange(newTestingT("doRange slice", t), reflect.ValueOf(test.x), test.fn)
+			doRange(subT("doRange slice", t), reflect.ValueOf(test.x), test.fn)
 		})
 		if ft.failed != test.isError {
 			explain, qualify := "test is %san error", "not "
@@ -115,7 +115,7 @@ var stringifyTests = []stringifyTest{
 
 func TestStringify(t *testing.T) {
 	for i, test := range stringifyTests {
-		tTest(newTestingT(sprintf("stringify %d", i), t), test)
+		tTest(subT(sprintf("stringify %d", i), t), test)
 	}
 }
 
@@ -127,7 +127,7 @@ type validateTableTest struct {
 func (test validateTableTest) Test(t Testing) {
 	meta := metaTestSimple{
 		sprintf("validateTable(t, %#v)", test.table),
-		func(t Testing) { validateTable(newTestingT("", t), test.table) },
+		func(t Testing) { validateTable(subT("", t), test.table) },
 		test.errs}
 	meta.Test(t)
 }
@@ -142,6 +142,6 @@ var validateTableTests = []validateTableTest{
 
 func TestValidateTable(t *testing.T) {
 	for i, test := range validateTableTests {
-		tTest(newTestingT(sprintf("vaidateTable %d", i), t), test)
+		tTest(subT(sprintf("vaidateTable %d", i), t), test)
 	}
 }

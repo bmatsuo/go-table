@@ -47,6 +47,6 @@ func TestErrorString(t *testing.T) {
 	}...)
 
 	for i, test := range errorStringTests {
-		tTest(newTestingT(sprintf("errorStringTest %d", i), t), test)
+		tTest(subT(sprintf("errorStringTest %d", i), t), test)
 	}
 }
