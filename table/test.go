@@ -68,8 +68,8 @@ func applyPanicExpectations(t T, exps []PanicExpectation, panicv interface{}) {
 }
 
 type ElementPanics interface {
-	Element                     // ElementPanics is an Element.
-	Panics() []PanicExpectation // ElementPanics when non-nil, certain panics expected.
+	Element                     // Is an Element.
+	Panics() []PanicExpectation // When non-nil, certain panic values are expected.
 }
 
 func getElementPanicsExpectations(t T, test ElementPanics) (exps []PanicExpectation, ok bool) {
@@ -85,35 +85,43 @@ func getElementPanicsExpectations(t T, test ElementPanics) (exps []PanicExpectat
 }
 
 type ElementBefore interface {
-	Element   // ElementBefore is an Element.
+	Element   // Is an Element.
 	Before(T) // Callback executed before the Test method.
 }
 
 type ElementAfter interface {
-	Element  // ElementAfter is an Element.
+	Element  // Is an Element.
 	After(T) // Callback executed after the Test method.
 }
 
 type ElementBeforeAfter interface {
-	Element   // ElementBeforeAfter is an Element.
-	Before(T) // ElementBeforeAfter is an ElementBefore.
-	After(T)  // ElementBeforeAfter is an ElementAfter.
+	Element   // Is an Element.
+	Before(T) // Is an ElementBefore.
+	After(T)  // Is an ElementAfter.
+}
+
+// Not an Element.
+type ElementGenerator interface {
+	Generate(T) []Element // A (possibly empty) slice of Elements.
 }
 
 // Cast an value as an Element, or create an error describing the failure.
-func mustElement(t T, elem interface{}) (test Element, err error) {
+func mustElement(t T, elem interface{}) (tests []Element, err error) {
 	switch elem.(type) {
 	case nil:
 		err = error_("nil slice element")
 		t.Error(err)
 		return
+	case ElementGenerator:
+		tests = elem.(ElementGenerator).Generate(t)
 	case Element:
+		tests = []Element{elem.(Element)}
 	default:
 		err = errorf("element does not implement table.T %v", reflect.TypeOf(elem))
 		t.Error(err)
 		return
 	}
-	return elem.(Element), nil
+	return
 }
 
 // Execute test's Test method. If test is an ElementBefore type execute

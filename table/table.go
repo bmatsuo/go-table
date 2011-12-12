@@ -103,8 +103,14 @@ func doRange(t *testingT, v reflect.Value, fn interface{}) {
 func testMap(t *testingT, v reflect.Value) {
 	doRange(t.sub("map"), v, func(k, v interface{}) error {
 		sub := t.sub(sprint(k))
-		if test, err := mustElement(sub, v); err == nil {
-			elementTest(sub, test)
+		if tests, err := mustElement(sub, v); err == nil {
+			for i, test := range tests {
+				if len(tests) > 1 {
+					elementTest(sub.sub(sprintf("%v %d", reflect.TypeOf(test), i)), test)
+				} else {
+					elementTest(sub, test)
+				}
+			}
 		}
 		return nil
 	})
@@ -129,8 +135,14 @@ func stringifyIndex(i int, v interface{}) string {
 func testSlice(t *testingT, v reflect.Value) {
 	doRange(t.sub("slice"), v, func(i int, elem interface{}) error {
 		sub := t.sub(stringifyIndex(i, elem))
-		if test, err := mustElement(sub, elem); err == nil {
-			elementTest(sub, test)
+		if tests, err := mustElement(sub, elem); err == nil {
+			for i, test := range tests {
+				if len(tests) > 1 {
+					elementTest(sub.sub(sprintf("%v %d", reflect.TypeOf(test), i)), test)
+				} else {
+					elementTest(sub, test)
+				}
+			}
 		}
 		return nil
 	})
