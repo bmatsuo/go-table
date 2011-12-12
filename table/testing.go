@@ -14,10 +14,10 @@ import ()
 
 type testingT struct {
 	name string
-	t    Testing
+	t    T
 }
 
-func subT(name string, t Testing) *testingT       { return &testingT{name, t} }
+func subT(name string, t T) *testingT       { return &testingT{name, t} }
 func (t *testingT) dup() (cp *testingT)           { cp = new(testingT); *cp = *t; return }
 func (t *testingT) sub(name string) (s *testingT) { s = subT(name, t); return }
 
@@ -57,7 +57,7 @@ func (t *testingT) Errorf(format string, args ...interface{}) { t.error(t.msgf(f
 func (t *testingT) Fatalf(format string, args ...interface{}) { t.fatal(t.msgf(format, args...)) }
 
 // Think *testing.T
-type Testing interface {
+type T interface {
 	Error(args ...interface{})
 	Errorf(format string, args ...interface{})
 	Fail()
