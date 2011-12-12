@@ -10,14 +10,15 @@ import (
 	"regexp"
 	"strings"
 	"testing"
+	"os"
 )
 
 type logItem struct{ v interface{} }
 
-func (item logItem) AsError() error {
+func (item logItem) AsError() os.Error {
 	switch item.v.(type) {
-	case error:
-		return item.v.(error)
+	case os.Error:
+		return item.v.(os.Error)
 	}
 	return nil
 }
@@ -66,8 +67,8 @@ func catchfailed(e interface{}) {
 	switch e.(type) {
 	case nil:
 		return
-	case error:
-		if e.(error) == errFailed {
+	case os.Error:
+		if e.(os.Error) == errFailed {
 			return
 		}
 	}

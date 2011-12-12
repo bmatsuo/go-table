@@ -10,16 +10,17 @@ import (
 	"reflect"
 	"regexp"
 	"testing"
+	"os"
 )
 
 type errorStringTest struct {
-	err     error
+	err     os.Error
 	matches []string
 }
 
 func (test errorStringTest) Test(t Testing) {
 	for i, r := range test.matches {
-		if !regexp.MustCompile(r).MatchString(test.err.Error()) {
+		if !regexp.MustCompile(r).MatchString(test.err.String()) {
 			t.Errorf("pattern %d (%s) doesn't match error string: %v", i, r, test.err)
 		}
 	}

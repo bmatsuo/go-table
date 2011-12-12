@@ -11,9 +11,10 @@ package table
  */
 
 import (
-	"errors"
+	//"errors"
 	"reflect"
 	"testing"
+	"os"
 )
 
 func TestTable(T *testing.T) {
@@ -24,7 +25,7 @@ type doRangeTest struct {
 	before, after func()
 	x, fn         interface{}
 	isError       bool
-	verify        func() error
+	verify        func() os.Error
 }
 
 var testint1 = new(int)
@@ -37,8 +38,8 @@ var doRangeTests = []doRangeTest{
 	// Make sure range callbacks are being called correctly.
 	{cleartestint, cleartestint,
 		[]int{1, 2, 3},
-		func(i, x int) error { *testint1 += i; *testint2 += x; return nil }, false,
-		func() (err error) {
+		func(i, x int) os.Error { *testint1 += i; *testint2 += x; return nil }, false,
+		func() (err os.Error) {
 			if !(*testint1 == 3 && *testint2 == 6) {
 				err = errorf("testint1: %d, testint2: %d", *testint1, *testint2)
 			}
@@ -47,8 +48,8 @@ var doRangeTests = []doRangeTest{
 	// Meta test to ensure test callbacks are being called correctly.
 	{onetestint, cleartestint,
 		[]int{1, 2, 3, 4},
-		func(i, x int) error { *testint1 *= i; *testint2 *= x; return nil }, false,
-		func() (err error) {
+		func(i, x int) os.Error { *testint1 *= i; *testint2 *= x; return nil }, false,
+		func() (err os.Error) {
 			if !(*testint1 == 0 && *testint2 == 24) {
 				err = errorf("testint1: %d, testint2: %d", *testint1, *testint2)
 			}
@@ -56,8 +57,8 @@ var doRangeTests = []doRangeTest{
 		}},
 	// Ensure that errors from the range callback stop the iteration.
 	{onetestint, cleartestint,
-		[]int{1, 2, 3}, func(i, x int) error { *testint1 += i; *testint2 += x; return errors.New("fail") }, true,
-		func() (err error) {
+		[]int{1, 2, 3}, func(i, x int) os.Error { *testint1 += i; *testint2 += x; return error_("fail") }, true,
+		func() (err os.Error) {
 			if !(*testint1 == 1 && *testint2 == 2) {
 				err = errorf("testint1: %d, testint2: %d", *testint1, *testint2)
 			}

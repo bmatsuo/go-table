@@ -11,8 +11,9 @@ package table
  */
 
 import (
-	"errors"
+	//"errors"
 	"fmt"
+	"os"
 )
 
 var (
@@ -25,22 +26,22 @@ var (
 /****************************/
 
 // Aliases to "fmt" functions.
-func sprint(v ...interface{}) string                 { return fmt.Sprint(v...) }
-func sprintf(format string, v ...interface{}) string { return fmt.Sprintf(format, v...) }
-func errorf(format string, v ...interface{}) error   { return fmt.Errorf(format, v...) }
+func sprint(v ...interface{}) string                  { return fmt.Sprint(v...) }
+func sprintf(format string, v ...interface{}) string  { return fmt.Sprintf(format, v...) }
+func errorf(format string, v ...interface{}) os.Error { return fmt.Errorf(format, v...) }
 
 /***********************************************/
 /* API functions for Test method return values */
 /***********************************************/
 
 // Create a new os.Error using the string representation of v.
-func error_(v ...interface{}) error { return errors.New(sprint(v...)) }
+func error_(v ...interface{}) os.Error { return os.NewError(sprint(v...)) }
 
 // An error that causes a table test to issue a fatal "testing" error to package
 // "testing".
-type fatalError struct{ Err error }
+type fatalError struct{ Err os.Error }
 
-func (f fatalError) Error() string { return f.Err.Error() }
+func (f fatalError) String() string { return f.Err.String() }
 
 // Create a new FatalError using the string representation of v.
 func fatal(v interface{}) fatalError { return fatalError{errorf("%v", v)} }
@@ -63,7 +64,7 @@ func msgf(name, format string, v ...interface{}) string {
 }
 
 // Execute a callback if the given error is non-nil.
-func onerror(err error, fn func(error)) bool {
+func onerror(err os.Error, fn func(os.Error)) bool {
 	if err != nil {
 		fn(err)
 		return true
