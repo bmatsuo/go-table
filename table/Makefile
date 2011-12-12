@@ -9,6 +9,7 @@ include $(GOROOT)/src/Make.inc
 
 TARG=table
 GOFILES=\
+		testing.go\
 		errors.go\
 		test.go\
         table.go\

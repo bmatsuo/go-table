@@ -25,36 +25,35 @@ type T interface {
 
 // These types act on strings values of uncaught panics inside Test() the
 // type's test method.  Acceptable value types are substrings,
-// *regexp.Regexp, or func(string) os.Error objects.
+// *regexp.Regexp, or func(Testing, interface{}) objects.
 type PanicExpectation interface{}
 
-func acceptablePanicExpectation(exp PanicExpectation) os.Error {
+func acceptablePanicExpectation(t Testing, exp PanicExpectation) (ok bool) {
 	switch exp.(type) {
 	case nil:
-		return error_("nil PanicExpectation")
-	case string, *regexp.Regexp, func(string) os.Error:
-		return nil
+		t.Error("nil PanicExpectation")
+		return
+	case string, *regexp.Regexp, func(Testing, string):
+		return true
 	}
-	return errorf("unacceptable PanicExpectation type %s", reflect.TypeOf(exp))
+	t.Errorf("unacceptable PanicExpectation type %s", reflect.TypeOf(exp))
+	return
 }
 
-func applyPanicExpectation(exp PanicExpectation, pstr string) (err os.Error) {
+func applyPanicExpectation(t Testing, exp PanicExpectation, panicv interface{}) {
 	switch exp.(type) {
 	case *regexp.Regexp:
 		r := exp.(*regexp.Regexp)
-		if !r.MatchString(pstr) {
-			err = fatalf("unexpected panic (doesn't match %v): %s", r, pstr)
+		if p := sprint(panicv); !r.MatchString(p) {
+			t.Errorf("unexpected panic (doesn't match %v): %s", r, p)
 		}
 	case string:
-		if strings.Index(pstr, exp.(string)) < 0 {
-			err = fatalf("unexpected panic (doesn't contain %#v): %s", exp, pstr)
+		if p := sprint(panicv); strings.Index(p, exp.(string)) < 0 {
+			t.Errorf("unexpected panic (doesn't contain %#v): %s", exp, p)
 		}
-	case func(string) os.Error:
-		if err := exp.(func(string) os.Error)(pstr); err != nil {
-			err = fatalf("panic callback error: %s", err)
-		}
+	case func(Testing, interface{}):
+		exp.(func(Testing, interface{}))(newTestingT("callback function", t), panicv)
 	}
-	return
 }
 
 type indexedError struct {
@@ -64,24 +63,10 @@ type indexedError struct {
 
 func (err indexedError) String() string { return err.Err.String() }
 
-func applyPanicExpectations(exps []PanicExpectation, pstr string) (err os.Error) {
-	var errs []indexedError
+func applyPanicExpectations(t Testing, exps []PanicExpectation, panicv interface{}) {
 	for i, exp := range exps {
-		if e := applyPanicExpectation(exp, pstr); e != nil {
-			errs = append(errs, indexedError{i, e})
-		}
+		applyPanicExpectation(newTestingT(sprintf("panic expectation %d", i), t), exp, panicv)
 	}
-	if len(errs) > 0 {
-		if e := errs[0]; len(errs) == 1 {
-			err = fatalf("PanicExpectation %d failure: %v", e.index, e)
-			return
-		}
-		err = fatal("PanicExpectation failure")
-		for _, e := range errs {
-			err = fatalf("%s\n\texpectation %d: %v", err, e.index, e)
-		}
-	}
-	return
 }
 
 type TPanics interface {
@@ -89,16 +74,14 @@ type TPanics interface {
 	Panics() []PanicExpectation // TPanics when non-nil, certain panics expected.
 }
 
-func getTPanicsExpectations(test TPanics) (exps []PanicExpectation, err os.Error) {
+func getTPanicsExpectations(t Testing, test TPanics) (exps []PanicExpectation, ok bool) {
 	if test == nil {
-		return nil, error_("nil test")
+		t.Error("nil test")
+		return
 	}
 	exps = test.Panics()
 	for i, exp := range exps {
-		if err = acceptablePanicExpectation(exp); err == nil {
-			err = errorf("PanicExpectation %d type error: %v", i, err)
-			return
-		}
+		ok = ok && acceptablePanicExpectation(newTestingT(sprintf("table.PanicExpectation %d", i), t), exp)
 	}
 	return
 }
@@ -157,28 +140,22 @@ func tTest(t Testing, test T) {
 	place = "during"
 	defer func() { place = "after" }()
 	defer func() {
-		panicv := recover()
-		switch test.(type) {
+		switch panicv := recover(); test.(type) {
 		case TPanics:
-			if exps, err := getTPanicsExpectations(test.(TPanics)); err != nil {
-				t.Errorf("error retrieving PanicExpectations: %v", err)
-			} else if hasexp := len(exps) > 0; panicv != nil {
-				if hasexp {
-					if err = applyPanicExpectations(exps, sprint(panicv)); err != nil {
-						t.Error(err)
-					}
-				} else {
-					t.Errorf("unexpected panic: %v", panicv)
-				}
-			} else {
-				if hasexp {
-					t.Errorf("test did not panic as expected %v", exps)
-				}
+			exps, _ := getTPanicsExpectations(t, test.(TPanics))
+			switch hasexp := len(exps) > 0; {
+			case hasexp && panicv != nil:
+				applyPanicExpectations(t, exps, panicv)
+			case panicv != nil:
+				t.Errorf("unexpected panic: %v", panicv)
+			case hasexp:
+				t.Errorf("test did not panic as expected %v", exps)
 			}
 			return
-		}
-		if panicv != nil {
-			t.Errorf("panic: %v", panicv)
+		default:
+			if panicv != nil {
+				t.Errorf("panic: %v", panicv)
+			}
 		}
 	}()
 	test.Test(t)

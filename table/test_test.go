@@ -66,14 +66,13 @@ func (test tTestExtraTest) Before() { fnCallNonNil(test.before) }
 func (test tTestExtraTest) After()  { fnCallNonNil(test.after) }
 func (test tTestExtraTest) Panics() (exps []PanicExpectation) {
 	switch test.exp.(type) {
+	case nil:
 	case string:
 		if sub := test.exp.(string); sub != "" {
 			return append(exps, sub)
 		}
 	default:
-		if p := test.exp; p == nil {
-			return append(exps, p)
-		}
+		return append(exps, test.exp)
 	}
 	return
 }
@@ -95,24 +94,23 @@ func tTestVerifyInt(x int) func(Testing) {
 }
 
 var tTestExtraTests = []tTestExtraTest{
-	{nil, nil, func(t Testing) {}, "", ""}, // Sanity test.
+	{nil, nil, func(t Testing) {}, nil, ""}, // Sanity test.
 	{nil, nil, tTestPanicTest("gophers"), "gophers", ""},
 	{nil, nil, tTestPanicTest("gophers"), regexp.MustCompile("gophers?"), ""},
-	{nil, nil, tTestPanicTest("gophers"), func(pstr string) os.Error {
-		if pstr != "gophers" {
-			return errorf("unexpected panic: %s", pstr)
+	{nil, nil, tTestPanicTest("gophers"), func(t Testing, panicv interface{}) {
+		if p := sprint(panicv); p != "gophers" {
+			t.Errorf("unexpected panic (missing \"gophers\"): %s", p)
 		}
-		return nil
 	}, ""},
 
 	// Order is important for next group.
-	{tTestBeforeInt(1), nil, tTestVerifyInt(1), "", ""},              // Tests Before call.
-	{nil, tTestAfterInt(1), tTestVerifyInt(1), "", ""},               // Ensures the value of the integer is persistant.
-	{tTestBeforeInt(3), tTestAfterInt(3), tTestVerifyInt(3), "", ""}, // Tests After call.
-	{tTestBeforeInt(1), tTestAfterInt(1), tTestVerifyInt(1), "", ""}, // Tests both Before and After work togeter.
+	{tTestBeforeInt(1), nil, tTestVerifyInt(1), nil, ""},              // Tests Before call.
+	{nil, tTestAfterInt(1), tTestVerifyInt(1), nil, ""},               // Ensures the value of the integer is persistant.
+	{tTestBeforeInt(3), tTestAfterInt(3), tTestVerifyInt(3), nil, ""}, // Tests After call.
+	{tTestBeforeInt(1), tTestAfterInt(1), tTestVerifyInt(1), nil, ""}, // Tests both Before and After work togeter.
 
-	{tTestPanic("gophers"), tTestNoOp(), tTestNoOpTest(), "", "before.*gophers"},
-	{tTestNoOp(), tTestPanic("gophers"), tTestNoOpTest(), "", "after.*gophers"},
+	{tTestPanic("gophers"), tTestNoOp(), tTestNoOpTest(), nil, "before.*gophers"},
+	{tTestNoOp(), tTestPanic("gophers"), tTestNoOpTest(), nil, "after.*gophers"},
 }
 
 func TestTTestExtraTests(t *testing.T) {
@@ -121,9 +119,9 @@ func TestTTestExtraTests(t *testing.T) {
 		ft := fauxTest(prefix, func(t Testing) { tTest(t, test) })
 		switch failed := ft.failed; {
 		case !failed && test.errpatt == "":
-			return
+			continue
 		case !failed:
-			t.Errorf("%s missing expected error: %s", prefix, test.errpatt)
+			t.Errorf("%s missing expected error: %v", prefix, test.errpatt)
 		case test.errpatt == "":
 			t.Errorf("%s unexpected error: %v", prefix, ft.log)
 		case !ft.logLike(test.errpatt):
