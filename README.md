@@ -3,9 +3,10 @@
 [the godoc url]: http://localhost:6060/pkg/github.com/bmatsuo/go-table/table/ "the Godoc URL"
 [table driven testing in go]: http://code.google.com/p/go-wiki/wiki/TableDrivenTests "table driven testing in Go"
 [dry]: http://en.wikipedia.org/wiki/Don't_repeat_yourself "DRY"
+[the examples directory]: https://github.com/bmatsuo/go-table/table/tree/master/examples "the examples directory"
 
-Go-table
-========
+[Go-table][gopkgdoc]
+====================
 
 Don't write boiler-plate code. Write test code.
 
@@ -119,6 +120,12 @@ with the form
 The unexpected output `"[%#foo]"` is clearly bogus. But, the idea here is that
 the test recieved its own name (type + slice index). And, that the error message
 printed includes the string of the error returned by flagtest's Test method.
+
+More examples
+-------------
+
+Some working examples of varying complexity can be found in
+[the examples directory][]
 
 Installation
 ============
