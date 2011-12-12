@@ -115,7 +115,7 @@ var stringifyTests = []stringifyTest{
 
 func TestStringify(t *testing.T) {
 	for i, test := range stringifyTests {
-		tTest(subT(sprintf("stringify %d", i), t), test)
+		elementTest(subT(sprintf("stringify %d", i), t), test)
 	}
 }
 
@@ -142,6 +142,6 @@ var validateTableTests = []validateTableTest{
 
 func TestValidateTable(t *testing.T) {
 	for i, test := range validateTableTests {
-		tTest(subT(sprintf("vaidateTable %d", i), t), test)
+		elementTest(subT(sprintf("vaidateTable %d", i), t), test)
 	}
 }

@@ -18,7 +18,7 @@ import (
 
 // Non-nil values returned by the Test method will cause the table test that
 // called Test to fail. A FatalError retured by Test stops the table test.
-type T interface {
+type Element interface {
 	Test(Testing) // Execute the test described by the object.
 }
 
@@ -68,12 +68,12 @@ func applyPanicExpectations(t Testing, exps []PanicExpectation, panicv interface
 	}
 }
 
-type TPanics interface {
-	T                           // TPanics is a TType.
-	Panics() []PanicExpectation // TPanics when non-nil, certain panics expected.
+type ElementPanics interface {
+	Element                     // ElementPanics is an Element.
+	Panics() []PanicExpectation // ElementPanics when non-nil, certain panics expected.
 }
 
-func getTPanicsExpectations(t Testing, test TPanics) (exps []PanicExpectation, ok bool) {
+func getElementPanicsExpectations(t Testing, test ElementPanics) (exps []PanicExpectation, ok bool) {
 	if test == nil {
 		t.Error("nil test")
 		return
@@ -85,42 +85,42 @@ func getTPanicsExpectations(t Testing, test TPanics) (exps []PanicExpectation, o
 	return
 }
 
-type TBefore interface {
-	T               // TBefore is a T type.
+type ElementBefore interface {
+	Element         // ElementBefore is an Element.
 	Before(Testing) // Callback executed before the Test method.
 }
 
-type TAfter interface {
-	T              // TAfter is a T type.
+type ElementAfter interface {
+	Element        // ElementAfter is an Element.
 	After(Testing) // Callback executed after the Test method.
 }
 
-type TBeforeAfter interface {
-	T               // TBeforeAfter is a T type.
-	Before(Testing) // TBeforeAfter is a TBefore type.
-	After(Testing)  // TBeforeAfter is a TAfter type.
+type ElementBeforeAfter interface {
+	Element         // ElementBeforeAfter is an Element.
+	Before(Testing) // ElementBeforeAfter is an ElementBefore.
+	After(Testing)  // ElementBeforeAfter is an ElementAfter.
 }
 
-// Cast an element as a T, or create an os.Error describing the failure.
-func mustT(t Testing, elem interface{}) (test T, err error) {
+// Cast an value as an Element, or create an error describing the failure.
+func mustElement(t Testing, elem interface{}) (test Element, err error) {
 	switch elem.(type) {
 	case nil:
 		err = error_("nil slice element")
 		t.Error(err)
 		return
-	case T:
+	case Element:
 	default:
 		err = errorf("element does not implement table.T %v", reflect.TypeOf(elem))
 		t.Error(err)
 		return
 	}
-	return elem.(T), nil
+	return elem.(Element), nil
 }
 
 // Execute t's Test method. If t is a TBefore type execute t.Before() prior to
 // t.Test(). If t is a TAfter type, execute t.After() after t.Test() returns.
 // Handles runtimes panics resulting from any of these callback.
-func tTest(t Testing, test T) {
+func elementTest(t Testing, test Element) {
 	place := "before"
 	defer func() {
 		if e := recover(); e != nil {
@@ -128,20 +128,20 @@ func tTest(t Testing, test T) {
 		}
 	}()
 	switch test.(type) {
-	case TBeforeAfter:
-		test.(TBefore).Before(subT("before test", t))
-		defer test.(TAfter).After(subT("after test", t))
-	case TBefore:
-		test.(TBefore).Before(subT("before test", t))
-	case TAfter:
-		defer test.(TAfter).After(subT("after test", t))
+	case ElementBeforeAfter:
+		test.(ElementBefore).Before(subT("before test", t))
+		defer test.(ElementAfter).After(subT("after test", t))
+	case ElementBefore:
+		test.(ElementBefore).Before(subT("before test", t))
+	case ElementAfter:
+		defer test.(ElementAfter).After(subT("after test", t))
 	}
 	place = "during"
 	defer func() { place = "after" }()
 	defer func() {
 		switch panicv := recover(); test.(type) {
-		case TPanics:
-			exps, _ := getTPanicsExpectations(t, test.(TPanics))
+		case ElementPanics:
+			exps, _ := getElementPanicsExpectations(t, test.(ElementPanics))
 			switch hasexp := len(exps) > 0; {
 			case hasexp && panicv != nil:
 				applyPanicExpectations(t, exps, panicv)

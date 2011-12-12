@@ -29,7 +29,7 @@ var tTestTests = []tTestTest{
 func TestTTest(t *testing.T) {
 	for i, test := range tTestTests {
 		prefix := sprintf("tTestTest %d", i)
-		ft := fauxTest(prefix, func(t Testing) { tTest(t, test) })
+		ft := fauxTest(prefix, func(t Testing) { elementTest(t, test) })
 		switch failed := ft.failed; {
 		case !failed && test.esubs == nil:
 			break
@@ -112,7 +112,7 @@ var tTestExtraTests = []tTestExtraTest{
 func TestTTestExtraTests(t *testing.T) {
 	for i, test := range tTestExtraTests {
 		prefix := sprintf("extra functionality test %d:", i)
-		ft := fauxTest(prefix, func(t Testing) { tTest(t, test) })
+		ft := fauxTest(prefix, func(t Testing) { elementTest(t, test) })
 		switch failed := ft.failed; {
 		case !failed && test.errpatt == "":
 			continue
