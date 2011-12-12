@@ -122,14 +122,6 @@ func mustElement(t T, elem interface{}) (tests []Element, err error) {
 		}
 		if len(nils) > 0 {
 			t.Errorf("nil generated Elements %v", nils)
-			goodtests := make([]Element, 0, len(tests)-len(nils))
-			nils = append(nils, len(tests))
-			for k, i := range nils {
-				if len(goodtests)+k != i {
-					goodtests = append(goodtests, tests[len(goodtests)+k:i]...)
-				}
-			}
-			tests = goodtests
 		}
 	case Element:
 		tests = []Element{elem.(Element)}
@@ -146,6 +138,9 @@ func mustElement(t T, elem interface{}) (tests []Element, err error) {
 // test.After() after test.Test() returns. Handles runtimes panics resulting
 // from any of these callback.
 func elementTest(t T, test Element) {
+	if test == nil {
+		return
+	}
 	place := "before"
 	defer func() {
 		if e := recover(); e != nil {
