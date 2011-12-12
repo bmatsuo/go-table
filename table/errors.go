@@ -45,25 +45,3 @@ func msg(name string, v ...interface{}) string {
 	return sprint(v...)
 }
 func msgname(name, typ string) string { return strings.Join([]string{name, typ}, " ") }
-
-// Functions to generate error strings.
-func esprint(name string, v ...interface{}) (err string) {
-	if Verbose {
-		name = msgname(name, "error")
-	}
-	err = msg(name, v...)
-	return
-}
-func fsprint(name string, v ...interface{}) string {
-	if Verbose {
-		name = msgname(name, "fatal")
-	}
-	return esprint(name, v...)
-}
-// Functions to generate error strings with formatted messages.
-func esprintf(name, format string, v ...interface{}) string {
-	return esprint(name, sprintf(format, v...))
-}
-func fsprintf(name, format string, v ...interface{}) string {
-	return fsprint(name, sprintf(format, v...))
-}
