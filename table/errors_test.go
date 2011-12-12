@@ -33,7 +33,7 @@ func TestErrorString(t *testing.T) {
 		{error_(fatalstr("hello", errorf("world"))), []string{`hello: world`}},
 		{error_(fatalstrf("hello", "%q", "world")), []string{`hello: "world"`}},
 		{errorf("this is a %s error %v", "formatted", reflect.TypeOf("abc")), []string{"this is a formatted error string"}},
-		{fatalf("this is a %s error string", "formatted"), []string{"this is a formatted error string"}},
+		//{fatalf("this is a %s error string", "formatted"), []string{"this is a formatted error string"}},
 	}
 	Verbose = true
 	defer func() { Verbose = false }()
@@ -43,7 +43,7 @@ func TestErrorString(t *testing.T) {
 		{error_(fatalstr("hello", errorf("world"))), []string{`hello fatal error: world`}},
 		{error_(fatalstrf("hello", "%q", "world")), []string{`hello fatal error: "world"`}},
 		{errorf("this is a %s error %v", "formatted", reflect.TypeOf("abc")), []string{"this is a formatted error string"}},
-		{fatalf("this is a %s error string", "formatted"), []string{"this is a formatted error string"}},
+		//{fatalf("this is a %s error string", "formatted"), []string{"this is a formatted error string"}},
 	}...)
 
 	for i, test := range errorStringTests {

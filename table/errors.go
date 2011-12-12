@@ -37,17 +37,6 @@ func errorf(format string, v ...interface{}) error   { return fmt.Errorf(format,
 // Create a new os.Error using the string representation of v.
 func error_(v ...interface{}) error { return errors.New(sprint(v...)) }
 
-// An error that causes a table test to issue a fatal "testing" error to package
-// "testing".
-type fatalError struct{ Err error }
-
-func (f fatalError) Error() string { return f.Err.Error() }
-
-// Create a new FatalError using the string representation of v.
-func fatal(v interface{}) fatalError { return fatalError{errorf("%v", v)} }
-// Like Fatal, but uses a formatted error message.
-func fatalf(format string, v ...interface{}) fatalError { return fatalError{errorf(format, v...)} }
-
 /*********************************************/
 /* Helper functions for the Test and friends */
 /*********************************************/
