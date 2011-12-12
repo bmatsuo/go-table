@@ -21,7 +21,7 @@ var (
 )
 
 // An error which can be returned by a T's Test method if the test was skipped.
-var ErrSkip = os.NewError("skip")
+var errSkip = os.NewError("skip")
 
 /****************************/
 /* General helper functions */
@@ -37,20 +37,18 @@ func errorf(format string, v ...interface{}) os.Error { return fmt.Errorf(format
 /***********************************************/
 
 // Create a new os.Error using the string representation of v.
-func Error(v ...interface{}) os.Error { return os.NewError(sprint(v...)) }
-// Create a new os.Error with a formatted string. Alias of fmt.Errorf.
-func Errorf(format string, v ...interface{}) os.Error { return errorf(format, v...) }
+func error_(v ...interface{}) os.Error { return os.NewError(sprint(v...)) }
 
 // An error that causes a table test to issue a fatal "testing" error to package
 // "testing".
-type FatalError struct{ os.Error }
+type fatalError struct{ os.Error }
 
-func (f FatalError) String() string { return f.Error.String() }
+func (f fatalError) String() string { return f.Error.String() }
 
 // Create a new FatalError using the string representation of v.
-func Fatal(v interface{}) FatalError { return FatalError{errorf("%v", v)} }
+func fatal(v interface{}) fatalError { return fatalError{errorf("%v", v)} }
 // Like Fatal, but uses a formatted error message.
-func Fatalf(format string, v ...interface{}) FatalError { return FatalError{errorf(format, v...)} }
+func fatalf(format string, v ...interface{}) fatalError { return fatalError{errorf(format, v...)} }
 
 /*********************************************/
 /* Helper functions for the Test and friends */
@@ -100,21 +98,21 @@ func fatalstrf(name, format string, v ...interface{}) string {
 }
 
 // Functions to log errors when they occur.
-func error(t Testing, name string, err os.Error) bool {
+func errorOnError(t Testing, name string, err os.Error) bool {
 	return onerror(err, func(err os.Error) {
-		if err == ErrSkip {
+		if err == errSkip {
 			if Verbose {
 				t.Logf("%s skipped", name)
 			}
 			return
 		}
 		switch err.(type) {
-		case FatalError:
-			fatal(t, name, err)
+		case fatalError:
+			fatalOnError(t, name, err)
 		}
 		t.Error(errorstr(name, err))
 	})
 }
-func fatal(t Testing, name string, err os.Error) bool {
+func fatalOnError(t Testing, name string, err os.Error) bool {
 	return onerror(err, func(err os.Error) { t.Error(fatalstr(name, err)) })
 }

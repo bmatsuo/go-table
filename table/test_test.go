@@ -100,7 +100,7 @@ var tTestExtraTests = []tTestExtraTest{
 	{nil, nil, tTestPanicTest("gophers"), regexp.MustCompile("gophers?"), ""},
 	{nil, nil, tTestPanicTest("gophers"), func(pstr string) os.Error {
 		if pstr != "gophers" {
-			return Errorf("unexpected panic: %s", pstr)
+			return errorf("unexpected panic: %s", pstr)
 		}
 		return nil
 	}, ""},

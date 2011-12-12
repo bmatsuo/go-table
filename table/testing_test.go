@@ -25,7 +25,7 @@ func (item logItem) AsError() os.Error {
 
 func (item logItem) String() string { return sprint(item.v) }
 
-var errFailed = Error("failed")
+var errFailed = error_("failed")
 
 // Construct with new(fauxT).
 type fauxT struct {
@@ -57,8 +57,8 @@ func (t *fauxT) Fail()                                     { t.failed = true }
 func (t *fauxT) FailNow()                                  { t.Fail(); panic(errFailed) }
 func (t *fauxT) Failed() bool                              { return t.failed }
 func (t *fauxT) Log(args ...interface{})                   { t.log = append(t.log, logItem{sprint(args...)}) }
-func (t *fauxT) Error(args ...interface{})                 { t.Log(Error(sprint(args...))); t.Fail() }
-func (t *fauxT) Fatal(args ...interface{})                 { t.Log(Error(sprint(args...))); t.FailNow() }
+func (t *fauxT) Error(args ...interface{})                 { t.Log(error_(sprint(args...))); t.Fail() }
+func (t *fauxT) Fatal(args ...interface{})                 { t.Log(error_(sprint(args...))); t.FailNow() }
 func (t *fauxT) Logf(format string, args ...interface{})   { t.Log(sprintf(format, args...)) }
 func (t *fauxT) Errorf(format string, args ...interface{}) { t.Error(sprintf(format, args...)) }
 func (t *fauxT) Fatalf(format string, args ...interface{}) { t.Fatal(sprintf(format, args...)) }

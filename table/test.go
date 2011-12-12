@@ -31,11 +31,11 @@ type PanicExpectation interface{}
 func acceptablePanicExpectation(exp PanicExpectation) os.Error {
 	switch exp.(type) {
 	case nil:
-		return Error("nil PanicExpectation")
+		return error_("nil PanicExpectation")
 	case string, *regexp.Regexp, func(string) os.Error:
 		return nil
 	}
-	return Errorf("unacceptable PanicExpectation type %s", reflect.TypeOf(exp))
+	return errorf("unacceptable PanicExpectation type %s", reflect.TypeOf(exp))
 }
 
 func applyPanicExpectation(exp PanicExpectation, pstr string) (err os.Error) {
@@ -43,15 +43,15 @@ func applyPanicExpectation(exp PanicExpectation, pstr string) (err os.Error) {
 	case *regexp.Regexp:
 		r := exp.(*regexp.Regexp)
 		if !r.MatchString(pstr) {
-			err = Fatalf("unexpected panic (doesn't match %v): %s", r, pstr)
+			err = fatalf("unexpected panic (doesn't match %v): %s", r, pstr)
 		}
 	case string:
 		if strings.Index(pstr, exp.(string)) < 0 {
-			err = Fatalf("unexpected panic (doesn't contain %#v): %s", exp, pstr)
+			err = fatalf("unexpected panic (doesn't contain %#v): %s", exp, pstr)
 		}
 	case func(string) os.Error:
 		if err := exp.(func(string) os.Error)(pstr); err != nil {
-			err = Fatalf("panic callback error: %s", err)
+			err = fatalf("panic callback error: %s", err)
 		}
 	}
 	return
@@ -73,12 +73,12 @@ func applyPanicExpectations(exps []PanicExpectation, pstr string) (err os.Error)
 	}
 	if len(errs) > 0 {
 		if e := errs[0]; len(errs) == 1 {
-			err = Fatalf("PanicExpectation %d failure: %v", e.index, e)
+			err = fatalf("PanicExpectation %d failure: %v", e.index, e)
 			return
 		}
-		err = Fatal("PanicExpectation failure")
+		err = fatal("PanicExpectation failure")
 		for _, e := range errs {
-			err = Fatalf("%s\n\texpectation %d: %v", err, e.index, e)
+			err = fatalf("%s\n\texpectation %d: %v", err, e.index, e)
 		}
 	}
 	return
@@ -91,12 +91,12 @@ type TPanics interface {
 
 func getTPanicsExpectations(test TPanics) (exps []PanicExpectation, err os.Error) {
 	if test == nil {
-		return nil, Error("nil test")
+		return nil, error_("nil test")
 	}
 	exps = test.Panics()
 	for i, exp := range exps {
 		if err = acceptablePanicExpectation(exp); err == nil {
-			err = Errorf("PanicExpectation %d type error: %v", i, err)
+			err = errorf("PanicExpectation %d type error: %v", i, err)
 			return
 		}
 	}
@@ -123,12 +123,12 @@ type TBeforeAfter interface {
 func mustT(t Testing, elem interface{}) (test T, err os.Error) {
 	switch elem.(type) {
 	case nil:
-		err = Error("nil slice element")
+		err = error_("nil slice element")
 		t.Error(err)
 		return
 	case T:
 	default:
-		err = Errorf("element does not implement table.T %v", reflect.TypeOf(elem))
+		err = errorf("element does not implement table.T %v", reflect.TypeOf(elem))
 		t.Error(err)
 		return
 	}
