@@ -11,7 +11,6 @@ package table
  */
 
 import (
-	//"errors"
 	"reflect"
 	"testing"
 	"os"
