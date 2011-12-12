@@ -122,9 +122,9 @@ func (test metaTestSimple) Test(t T) {
 	}}.Test(t)
 }
 
-type testingTTest metaTest
+type tTest metaTest
 
-func (test testingTTest) Test(t T) { metaTest(test).Test(t) }
+func (test tTest) Test(t T) { metaTest(test).Test(t) }
 
 func stringContains(t T, name, text, sub string) {
 	if strings.Index(text, sub) < 0 {
@@ -152,7 +152,7 @@ func sizeLog(t T, log []logItem, size int) {
 	}
 }
 
-var testingTTests = []testingTTest{
+var tTests = []tTest{
 	{"testname", func(t T) {}, false, func(t T, ft *fauxT) { emptyLog(t, ft.log) }},
 	{"testname", func(t T) { t.Fail() }, true, func(t T, ft *fauxT) { emptyLog(t, ft.log) }},
 	{"testname", func(t T) { t.FailNow() }, true, func(t T, ft *fauxT) { emptyLog(t, ft.log) }},
@@ -190,7 +190,7 @@ var testingTTests = []testingTTest{
 }
 
 func TestT(t *testing.T) {
-	for i, test := range testingTTests {
+	for i, test := range tTests {
 		t.Log("test ", i)
 		test.Test(t)
 	}
