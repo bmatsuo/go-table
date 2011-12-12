@@ -18,8 +18,8 @@ import (
 )
 
 var (
-	Verbose bool       // If true more verbose errors, as well as passed tests, are logged.
-	MsgFmt  = "%s: %s" // Result output format. Can be changed to another 2-argument string.
+	Verbose bool       // If true more verbose errors are logged.
+	MsgFmt  = "%s: %s" // Result output format. Can be any 2-argument string.
 )
 
 // Aliases to "fmt" functions.
