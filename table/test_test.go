@@ -49,21 +49,20 @@ func TestTTest(t *testing.T) {
 }
 
 type tTestExtraTest struct {
-	before, after func()
-	verify        func(Testing)
-	exp           interface{}
-	errpatt       string
+	before, after, verify func(Testing)
+	exp                   interface{}
+	errpatt               string
 }
 
 func (test tTestExtraTest) Test(t Testing) { test.verify(t) }
 
-func fnCallNonNil(fn func()) {
+func testingCallNonNil(fn func(Testing), t Testing) {
 	if fn != nil {
-		fn()
+		fn(t)
 	}
 }
-func (test tTestExtraTest) Before() { fnCallNonNil(test.before) }
-func (test tTestExtraTest) After()  { fnCallNonNil(test.after) }
+func (test tTestExtraTest) Before(t Testing) { testingCallNonNil(test.before, t) }
+func (test tTestExtraTest) After(t Testing)  { testingCallNonNil(test.after, t) }
 func (test tTestExtraTest) Panics() (exps []PanicExpectation) {
 	switch test.exp.(type) {
 	case nil:
@@ -79,12 +78,10 @@ func (test tTestExtraTest) Panics() (exps []PanicExpectation) {
 
 var tTestExtraTestInt = new(int)
 
-func tTestPanicTest(msg string) func(Testing) { return func(Testing) { panic(msg) } }
-func tTestPanic(msg string) func()            { return func() { panic(msg) } }
-func tTestBeforeInt(plus int) func()          { return func() { (*tTestExtraTestInt) += plus } }
-func tTestAfterInt(minus int) func()          { return func() { (*tTestExtraTestInt) -= minus } }
-func tTestNoOpTest() func(Testing)            { return func(Testing) {} }
-func tTestNoOp() func()                       { return func() {} }
+func tTestPanic(msg string) func(Testing)   { return func(t Testing) { panic(msg) } }
+func tTestBeforeInt(plus int) func(Testing) { return func(t Testing) { (*tTestExtraTestInt) += plus } }
+func tTestAfterInt(minus int) func(Testing) { return func(t Testing) { (*tTestExtraTestInt) -= minus } }
+func tTestNoOp() func(Testing)              { return func(t Testing) {} }
 func tTestVerifyInt(x int) func(Testing) {
 	return func(t Testing) {
 		if y := (*tTestExtraTestInt); y != x {
@@ -95,9 +92,9 @@ func tTestVerifyInt(x int) func(Testing) {
 
 var tTestExtraTests = []tTestExtraTest{
 	{nil, nil, func(t Testing) {}, nil, ""}, // Sanity test.
-	{nil, nil, tTestPanicTest("gophers"), "gophers", ""},
-	{nil, nil, tTestPanicTest("gophers"), regexp.MustCompile("gophers?"), ""},
-	{nil, nil, tTestPanicTest("gophers"), func(t Testing, panicv interface{}) {
+	{nil, nil, tTestPanic("gophers"), "gophers", ""},
+	{nil, nil, tTestPanic("gophers"), regexp.MustCompile("gophers?"), ""},
+	{nil, nil, tTestPanic("gophers"), func(t Testing, panicv interface{}) {
 		if p := sprint(panicv); p != "gophers" {
 			t.Errorf("unexpected panic (missing \"gophers\"): %s", p)
 		}
@@ -109,8 +106,8 @@ var tTestExtraTests = []tTestExtraTest{
 	{tTestBeforeInt(3), tTestAfterInt(3), tTestVerifyInt(3), nil, ""}, // Tests After call.
 	{tTestBeforeInt(1), tTestAfterInt(1), tTestVerifyInt(1), nil, ""}, // Tests both Before and After work togeter.
 
-	{tTestPanic("gophers"), tTestNoOp(), tTestNoOpTest(), nil, "before.*gophers"},
-	{tTestNoOp(), tTestPanic("gophers"), tTestNoOpTest(), nil, "after.*gophers"},
+	{tTestPanic("gophers"), tTestNoOp(), tTestNoOp(), nil, "before.*gophers"},
+	{tTestNoOp(), tTestPanic("gophers"), tTestNoOp(), nil, "after.*gophers"},
 }
 
 func TestTTestExtraTests(t *testing.T) {

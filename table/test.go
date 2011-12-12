@@ -87,19 +87,19 @@ func getTPanicsExpectations(t Testing, test TPanics) (exps []PanicExpectation, o
 }
 
 type TBefore interface {
-	T        // TBefore is a T type.
-	Before() // Callback executed before the Test method.
+	T               // TBefore is a T type.
+	Before(Testing) // Callback executed before the Test method.
 }
 
 type TAfter interface {
-	T       // TAfter is a T type.
-	After() // Callback executed after the Test method.
+	T              // TAfter is a T type.
+	After(Testing) // Callback executed after the Test method.
 }
 
 type TBeforeAfter interface {
-	T        // TBeforeAfter is a T type.
-	Before() // TBeforeAfter is a TBefore type.
-	After()  // TBeforeAfter is a TAfter type.
+	T               // TBeforeAfter is a T type.
+	Before(Testing) // TBeforeAfter is a TBefore type.
+	After(Testing)  // TBeforeAfter is a TAfter type.
 }
 
 // Cast an element as a T, or create an os.Error describing the failure.
@@ -130,12 +130,12 @@ func tTest(t Testing, test T) {
 	}()
 	switch test.(type) {
 	case TBeforeAfter:
-		test.(TBefore).Before()
-		defer test.(TAfter).After()
+		test.(TBefore).Before(newTestingT("before test", t))
+		defer test.(TAfter).After(newTestingT("after test", t))
 	case TBefore:
-		test.(TBefore).Before()
+		test.(TBefore).Before(newTestingT("before test", t))
 	case TAfter:
-		defer test.(TAfter).After()
+		defer test.(TAfter).After(newTestingT("after test", t))
 	}
 	place = "during"
 	defer func() { place = "after" }()
