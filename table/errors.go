@@ -20,9 +20,6 @@ var (
 	MsgFmt  = "%s: %s" // Result output format. Can be changed to another 2-argument string.
 )
 
-// An error which can be returned by a T's Test method if the test was skipped.
-var errSkip = os.NewError("skip")
-
 /****************************/
 /* General helper functions */
 /****************************/
@@ -95,24 +92,4 @@ func errorstrf(name, format string, v ...interface{}) string {
 }
 func fatalstrf(name, format string, v ...interface{}) string {
 	return fatalstr(name, sprintf(format, v...))
-}
-
-// Functions to log errors when they occur.
-func errorOnError(t Testing, name string, err os.Error) bool {
-	return onerror(err, func(err os.Error) {
-		if err == errSkip {
-			if Verbose {
-				t.Logf("%s skipped", name)
-			}
-			return
-		}
-		switch err.(type) {
-		case fatalError:
-			fatalOnError(t, name, err)
-		}
-		t.Error(errorstr(name, err))
-	})
-}
-func fatalOnError(t Testing, name string, err os.Error) bool {
-	return onerror(err, func(err os.Error) { t.Error(fatalstr(name, err)) })
 }
