@@ -78,10 +78,10 @@ func TestDoRange(t *testing.T) {
 			if ft.failed {
 				qualify = ""
 			}
-			t.Error(errorstrf(name, explain, qualify))
+			t.Error(esprintf(name, explain, qualify))
 		}
 		if err := test.verify(); err != nil {
-			t.Error(errorstrf(name, "verification failure: %v", err))
+			t.Error(esprintf(name, "verification failure: %v", err))
 		}
 		if test.after != nil {
 			test.after()

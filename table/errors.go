@@ -30,11 +30,7 @@ func sprint(v ...interface{}) string                 { return fmt.Sprint(v...) }
 func sprintf(format string, v ...interface{}) string { return fmt.Sprintf(format, v...) }
 func errorf(format string, v ...interface{}) error   { return fmt.Errorf(format, v...) }
 
-/***********************************************/
-/* API functions for Test method return values */
-/***********************************************/
-
-// Create a new os.Error using the string representation of v.
+// Create a new error using the string representation of v.
 func error_(v ...interface{}) error { return errors.New(sprint(v...)) }
 
 /*********************************************/
@@ -51,23 +47,23 @@ func msg(name string, v ...interface{}) string {
 func msgname(name, typ string) string { return strings.Join([]string{name, typ}, " ") }
 
 // Functions to generate error strings.
-func errorstr(name string, v ...interface{}) (err string) {
+func esprint(name string, v ...interface{}) (err string) {
 	if Verbose {
 		name = msgname(name, "error")
 	}
 	err = msg(name, v...)
 	return
 }
-func fatalstr(name string, v ...interface{}) string {
+func fsprint(name string, v ...interface{}) string {
 	if Verbose {
 		name = msgname(name, "fatal")
 	}
-	return errorstr(name, v...)
+	return esprint(name, v...)
 }
 // Functions to generate error strings with formatted messages.
-func errorstrf(name, format string, v ...interface{}) string {
-	return errorstr(name, sprintf(format, v...))
+func esprintf(name, format string, v ...interface{}) string {
+	return esprint(name, sprintf(format, v...))
 }
-func fatalstrf(name, format string, v ...interface{}) string {
-	return fatalstr(name, sprintf(format, v...))
+func fsprintf(name, format string, v ...interface{}) string {
+	return fsprint(name, sprintf(format, v...))
 }
