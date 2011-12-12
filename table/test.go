@@ -109,7 +109,7 @@ type ElementGenerator interface {
 func mustElement(t T, elem interface{}) (tests []Element, err error) {
 	switch elem.(type) {
 	case nil:
-		err = error_("nil slice element")
+		err = error_("nil table.Element")
 		t.Error(err)
 		return
 	case ElementGenerator:
