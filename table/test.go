@@ -52,7 +52,7 @@ func applyPanicExpectation(t Testing, exp PanicExpectation, panicv interface{}) 
 			t.Errorf("unexpected panic (doesn't contain %#v): %s", exp, p)
 		}
 	case func(Testing, interface{}):
-		exp.(func(Testing, interface{}))(newTestingT("callback function", t), panicv)
+		exp.(func(Testing, interface{}))(subT("callback function", t), panicv)
 	}
 }
 
@@ -65,7 +65,7 @@ func (err indexedError) String() string { return err.Err.String() }
 
 func applyPanicExpectations(t Testing, exps []PanicExpectation, panicv interface{}) {
 	for i, exp := range exps {
-		applyPanicExpectation(newTestingT(sprintf("panic expectation %d", i), t), exp, panicv)
+		applyPanicExpectation(subT(sprintf("panic expectation %d", i), t), exp, panicv)
 	}
 }
 
@@ -81,7 +81,7 @@ func getTPanicsExpectations(t Testing, test TPanics) (exps []PanicExpectation, o
 	}
 	exps = test.Panics()
 	for i, exp := range exps {
-		ok = ok && acceptablePanicExpectation(newTestingT(sprintf("table.PanicExpectation %d", i), t), exp)
+		ok = ok && acceptablePanicExpectation(subT(sprintf("table.PanicExpectation %d", i), t), exp)
 	}
 	return
 }
@@ -130,12 +130,12 @@ func tTest(t Testing, test T) {
 	}()
 	switch test.(type) {
 	case TBeforeAfter:
-		test.(TBefore).Before(newTestingT("before test", t))
-		defer test.(TAfter).After(newTestingT("after test", t))
+		test.(TBefore).Before(subT("before test", t))
+		defer test.(TAfter).After(subT("after test", t))
 	case TBefore:
-		test.(TBefore).Before(newTestingT("before test", t))
+		test.(TBefore).Before(subT("before test", t))
 	case TAfter:
-		defer test.(TAfter).After(newTestingT("after test", t))
+		defer test.(TAfter).After(subT("after test", t))
 	}
 	place = "during"
 	defer func() { place = "after" }()

@@ -161,7 +161,7 @@ func validateTable(t *testingT, table interface{}) (tab reflect.Value, k reflect
 }
 
 func testHelper(t *testingT, table interface{}) {
-	tinternal := newTestingT("internal table.Test", t)
+	tinternal := subT("internal table.Test", t)
 	val, k := validateTable(tinternal.sub("table validation"), table)
 	switch k {
 	case reflect.Slice:
@@ -180,4 +180,4 @@ func testHelper(t *testingT, table interface{}) {
 //
 // A feasible future enhancement would be to allow map tables. Possibly chan
 // tables.
-func Test(t *testing.T, table interface{}) { testHelper(newTestingT("", t), table) }
+func Test(t *testing.T, table interface{}) { testHelper(subT("", t), table) }

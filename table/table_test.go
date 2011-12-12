@@ -72,17 +72,17 @@ func TestDoRange(t *testing.T) {
 			test.before()
 		}
 		ft := fauxTest("doRange test", func(t Testing) {
-			doRange(newTestingT("doRange slice", t), reflect.ValueOf(test.x), test.fn)
+			doRange(subT("doRange slice", t), reflect.ValueOf(test.x), test.fn)
 		})
 		if ft.failed != test.isError {
 			explain, qualify := "test is %san error", "not "
 			if ft.failed {
 				qualify = ""
 			}
-			t.Error(errorstrf(name, explain, qualify))
+			t.Error(esprintf(name, explain, qualify))
 		}
 		if err := test.verify(); err != nil {
-			t.Error(errorstrf(name, "verification failure: %v", err))
+			t.Error(esprintf(name, "verification failure: %v", err))
 		}
 		if test.after != nil {
 			test.after()
@@ -116,7 +116,7 @@ var stringifyTests = []stringifyTest{
 
 func TestStringify(t *testing.T) {
 	for i, test := range stringifyTests {
-		tTest(newTestingT(sprintf("stringify %d", i), t), test)
+		tTest(subT(sprintf("stringify %d", i), t), test)
 	}
 }
 
@@ -128,7 +128,7 @@ type validateTableTest struct {
 func (test validateTableTest) Test(t Testing) {
 	meta := metaTestSimple{
 		sprintf("validateTable(t, %#v)", test.table),
-		func(t Testing) { validateTable(newTestingT("", t), test.table) },
+		func(t Testing) { validateTable(subT("", t), test.table) },
 		test.errs}
 	meta.Test(t)
 }
@@ -143,6 +143,6 @@ var validateTableTests = []validateTableTest{
 
 func TestValidateTable(t *testing.T) {
 	for i, test := range validateTableTests {
-		tTest(newTestingT(sprintf("vaidateTable %d", i), t), test)
+		tTest(subT(sprintf("vaidateTable %d", i), t), test)
 	}
 }

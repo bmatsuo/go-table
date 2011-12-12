@@ -77,7 +77,7 @@ func catchfailed(e interface{}) {
 func fauxTest(name string, test func(Testing)) (t *fauxT) {
 	t = new(fauxT)
 	defer func() { catchfailed(recover()) }()
-	test(newTestingT(name, t))
+	test(subT(name, t))
 	return
 }
 
@@ -117,7 +117,7 @@ func (test metaTestSimple) Test(t Testing) {
 		}
 		for i, patt := range test.errs {
 			if !ft.logLike(patt) {
-				newTestingT(sprintf("error %d", i), t).Errorf("missing error: %v", patt)
+				subT(sprintf("error %d", i), t).Errorf("missing error: %v", patt)
 			}
 		}
 	}}.Test(t)
