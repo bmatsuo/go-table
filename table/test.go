@@ -121,12 +121,12 @@ func mustElement(t T, elem interface{}) (tests []Element, err error) {
 			}
 		}
 		if len(nils) > 0 {
-			t.Errorf("nil generated Elements %v", nils)
+			t.Errorf("nil generated table.Element(s) %v", nils)
 		}
 	case Element:
 		tests = []Element{elem.(Element)}
 	default:
-		err = errorf("element does not implement table.T %v", reflect.TypeOf(elem))
+		err = errorf("not a table.Element or table.ElementGenerator: %v", reflect.TypeOf(elem))
 		t.Error(err)
 		return
 	}
